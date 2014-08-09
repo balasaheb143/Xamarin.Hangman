@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/hangman"
+    android:orientation="horizontal"
+    android:weightSum="1" >
+
+    <!-- sign-in button -->
+
+    <!-- sign-out button -->
+
+    <Button
+        android:id="@+id/new_button"
+        android:layout_width="200dp"
+        android:layout_height="40dp"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="189dp"
+        android:background="@drawable/button"
+        android:text="@string/ACTIVITY_MAINMENU_NEWGAME"
+        android:textColor="@color/black"
+        android:textSize="12pt"
+        android:textStyle="bold"
+        android:typeface="serif" />
+
+    <Button
+        android:id="@+id/continue_button"
+        android:layout_width="200dp"
+        android:layout_height="40dp"
+        android:layout_alignLeft="@+id/new_button"
+        android:layout_below="@+id/new_button"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/button"
+        android:text="@string/ACTIVITY_MAINMENU_CONTINUE"
+        android:textColor="@color/black"
+        android:textSize="12pt"
+        android:textStyle="bold"
+        android:typeface="serif" />
+
+    <Button
+        android:id="@+id/about_button"
+        android:layout_width="200dp"
+        android:layout_height="40dp"
+        android:layout_alignLeft="@+id/continue_button"
+        android:layout_below="@+id/continue_button"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/button"
+        android:text="@string/ACTIVITY_MAINMENU_ABOUT"
+        android:textColor="@color/black"
+        android:textSize="12pt"
+        android:textStyle="bold"
+        android:typeface="serif" />
+
+    <Button
+        android:id="@+id/exit_button"
+        android:layout_width="200dp"
+        android:layout_height="40dp"
+        android:layout_alignLeft="@+id/about_button"
+        android:layout_below="@+id/about_button"
+        android:layout_marginTop="20dp"
+        android:background="@drawable/button"
+        android:text="@string/ACTIVITY_MAINMENU_EXIT"
+        android:textColor="@color/black"
+        android:textSize="12pt"
+        android:textStyle="bold"
+        android:typeface="serif" />
+
+    <com.google.android.gms.common.SignInButton
+        android:id="@+id/sign_in_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignBottom="@+id/new_button"
+        android:layout_centerHorizontal="true"
+        android:layout_marginBottom="54dp" >
+    </com.google.android.gms.common.SignInButton>
+
+    <Button
+        android:id="@+id/sign_out_button"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="23dp"
+        android:text="Sign Out"
+        android:visibility="gone" />
+
+</RelativeLayout>

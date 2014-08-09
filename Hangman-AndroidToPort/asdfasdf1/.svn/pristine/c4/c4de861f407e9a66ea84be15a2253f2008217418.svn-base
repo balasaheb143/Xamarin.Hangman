@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="LetterButton">
+              
+        <attr name="letter" format="string" />
+        <attr name="clickedImage" format="integer" />
+        <attr name="unclickedImage" format="integer" />
+    </declare-styleable>
+    
+    
+</resources>

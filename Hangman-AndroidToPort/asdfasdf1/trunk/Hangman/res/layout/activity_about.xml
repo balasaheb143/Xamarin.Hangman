@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/hman1"
+    android:orientation="horizontal"
+    android:padding="5pt" >
+
+    <ImageView
+        android:id="@+id/btn_back"
+        android:layout_width="60dp"
+        android:layout_height="40dp"
+        android:layout_alignParentBottom="true"
+        android:layout_weight="0.95"
+        android:background="@drawable/back" />
+
+    <ScrollView
+        android:id="@+id/Scrollview"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_above="@+id/btn_back"
+        android:layout_marginLeft="10dp"
+        android:layout_weight="0.95" >
+
+        <TextView
+            android:id="@+id/TextView1"
+            android:layout_width="fill_parent"
+            android:layout_height="447dp"
+            android:layout_marginBottom="50dp"
+            android:padding="5pt"
+            android:text="@string/ACTIVITY_ABOUT_DESCRIPTION"
+            android:textColor="@color/black"
+            android:textSize="8pt"
+            android:typeface="serif" />
+    </ScrollView>
+
+</RelativeLayout>

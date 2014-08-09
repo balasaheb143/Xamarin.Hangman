@@ -1,0 +1,39 @@
+package com.fundora.hangman;
+
+import android.content.Context;
+import android.util.AttributeSet;
+import android.widget.TextView;
+
+public class SelectableTextView extends TextView {
+
+	private boolean selected = false;
+	
+	public SelectableTextView(Context context) {
+		super(context);
+		// TODO Auto-generated constructor stub
+	}
+
+	public SelectableTextView(Context context, AttributeSet attrs) {
+		super(context, attrs);
+		// TODO Auto-generated constructor stub
+	}
+
+	public SelectableTextView(Context context, AttributeSet attrs, int defStyle) {
+		super(context, attrs, defStyle);
+		// TODO Auto-generated constructor stub
+	}
+	
+	public void setSelected( boolean selected ){
+		this.selected = selected;
+		if (selected)
+			
+			this.setBackgroundResource(R.color.blue);
+		else
+			this.setBackgroundResource(R.color.black);
+		
+	}
+
+	public boolean isSelected() {
+		return selected;
+	}
+}

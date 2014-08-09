@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/gamemodes"
+    android:orientation="vertical" >
+
+    <RelativeLayout
+        android:id="@+id/RelativeLayout01"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentLeft="true"
+        android:layout_marginBottom="59dp"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:paddingTop="30dp"
+        android:weightSum="1" >
+
+        <Button
+            android:id="@+id/btn_classic"
+            android:layout_width="200dp"
+            android:layout_height="40dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignRight="@+id/Survival"
+            android:background="@drawable/button"
+            android:text="Classic"
+            android:textColor="@color/black"
+            android:textSize="14pt"
+            android:textStyle="bold"
+            android:typeface="serif" />
+
+        <Button
+            android:id="@+id/Survival"
+            android:layout_width="200dp"
+            android:layout_height="40dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignRight="@+id/Time_Attack"
+            android:layout_below="@+id/btn_classic"
+            android:layout_marginTop="5pt"
+            android:background="@drawable/button"
+            android:text="Survival"
+            android:textColor="@color/black"
+            android:textSize="14pt"
+            android:textStyle="bold"
+            android:typeface="serif" />
+
+        <Button
+            android:id="@+id/Time_Attack"
+            android:layout_width="200dp"
+            android:layout_height="40dp"
+            android:layout_alignParentLeft="true"
+            android:layout_alignRight="@+id/Survival_Attack"
+            android:layout_below="@+id/Survival"
+            android:layout_marginTop="5pt"
+            android:background="@drawable/button"
+            android:text="Time Attack"
+            android:textColor="@color/black"
+            android:textSize="14pt"
+            android:textStyle="bold"
+            android:typeface="serif" />
+
+        <Button
+            android:id="@+id/Survival_Attack"
+            android:layout_width="230dp"
+            android:layout_height="40dp"
+            android:layout_below="@+id/Time_Attack"
+            android:layout_marginTop="5pt"
+            android:background="@drawable/button"
+            android:text="Survival Attack"
+            android:textColor="@color/black"
+            android:textSize="14pt"
+            android:textStyle="bold"
+            android:typeface="serif" />
+    </RelativeLayout>
+
+</RelativeLayout>

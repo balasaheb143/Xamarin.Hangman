@@ -1,0 +1,163 @@
+package com.fundora.hangman;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import android.app.Activity;
+import android.content.Intent;
+import android.graphics.Typeface;
+import android.media.MediaPlayer;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.Chronometer;
+
+public class Hangman extends Activity  {
+
+	// Butoane de initiere
+	Button btnContinue;
+	Button btnNewGame;
+	Button btnHighScore;
+
+	Button btnAbout;
+	Button btnExit;
+
+	MediaPlayer mpHangman;
+	MediaPlayer mpButtonClick;
+	Chronometer mChronometer;
+	boolean HardwareKeyboard = true, TouchScreenKeyboard = true;
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+				WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+		setContentView(R.layout.main);
+
+		mpHangman = MediaPlayer.create(Hangman.this, R.raw.logo);
+		mpHangman.start();
+		mpHangman.setLooping(true);
+		mpButtonClick = MediaPlayer.create(this, R.raw.button_click);
+
+		btnContinue = (Button) findViewById(R.id.continue_button);
+		btnNewGame = (Button) findViewById(R.id.new_button);
+		btnAbout = (Button) findViewById(R.id.about_button);
+		btnExit = (Button) findViewById(R.id.exit_button);
+
+		Typeface tf = Typeface.createFromAsset(getAssets(),
+				"fonts/GosmickSansBold.ttf");
+
+		btnContinue.setTypeface(tf);
+		btnNewGame.setTypeface(tf);
+		btnAbout.setTypeface(tf);
+		btnExit.setTypeface(tf);
+
+		// creare clicklisteners
+		btnContinue.setOnClickListener(new View.OnClickListener() {
+
+			public void onClick(View v) {
+				// -1 jocul va continua de pe salvare
+				mpButtonClick.start();
+				startGame(-1, Game.MODE_NORMAL);
+			}
+
+		});
+
+		btnNewGame.setOnClickListener(new View.OnClickListener() {
+
+			public void onClick(View v) {
+				mpButtonClick.start();
+				Intent gamemodesIntent = new Intent(Hangman.this,
+						com.fundora.hangman.GameModes.class);
+				Hangman.this.startActivity(gamemodesIntent);
+
+			}
+		});
+
+		btnAbout.setOnClickListener(new View.OnClickListener() {
+
+			public void onClick(View v) {
+				mpButtonClick.start();
+				Intent aboutIntent = new Intent(Hangman.this,
+						com.fundora.hangman.About.class);
+				Hangman.this.startActivity(aboutIntent);
+			}
+		});
+
+		btnExit.setOnClickListener(new View.OnClickListener() {
+
+			public void onClick(View v) {
+				mpButtonClick.start();
+				android.os.Process.killProcess(android.os.Process.myPid());
+			}
+		});
+
+	}
+
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		MenuInflater meniu = getMenuInflater();
+		meniu.inflate(R.menu.main_menu, menu);
+		return true;
+	}
+
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int itemId = item.getItemId();
+		if (itemId == R.id.Setari) {
+			mpButtonClick.start();
+			Intent aboutIntent = new Intent(Hangman.this,
+					com.fundora.hangman.Settings.class);
+			Hangman.this.startActivity(aboutIntent);
+			return true;
+		} else if (itemId == R.id.Exit) {
+			mpButtonClick.start();
+			android.os.Process.killProcess(android.os.Process.myPid());
+			return true;
+		}
+		return false;
+	}
+
+	void loadSettings() {
+		String collected = null;
+		FileInputStream fis = null;
+		try {
+			fis = openFileInput(Settings.FILENAME);
+			byte[] dataArray = new byte[fis.available()];
+			while (fis.read(dataArray) != -1) {
+				collected = new String(dataArray);
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				fis.close();
+				String[] setting = collected.split(";");
+				HardwareKeyboard = Boolean.parseBoolean(setting[0]);
+				TouchScreenKeyboard = Boolean.parseBoolean(setting[1]);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void startGame(int i, int gamemode) {
+		Intent intent = new Intent(Hangman.this, com.fundora.hangman.Game.class);
+		intent.putExtra(Game.KEY_DIFFICULTY, i);
+		intent.putExtra(Game.GAME_MODE, gamemode);
+		startActivity(intent);
+	}
+
+}

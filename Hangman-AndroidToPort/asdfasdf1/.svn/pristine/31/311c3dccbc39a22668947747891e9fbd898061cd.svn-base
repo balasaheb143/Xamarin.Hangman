@@ -1,0 +1,943 @@
+package com.fundora.hangman;
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Random;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.content.SharedPreferences;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Typeface;
+import android.media.MediaPlayer;
+import android.os.Bundle;
+import android.os.CountDownTimer;
+import android.view.Gravity;
+import android.view.KeyEvent;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.view.View.OnKeyListener;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ImageView;
+import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
+
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.games.Games;
+
+public class Game extends Activity implements
+		GoogleApiClient.ConnectionCallbacks,
+		GoogleApiClient.OnConnectionFailedListener {
+
+	GoogleApiClient mGoogleClient;
+	public static final String KEY_DIFFICULTY = "key_diff";
+	public static final String GAME_MODE = "gamemode";
+	public static final String PREFS_NAME = "Hangman_pref";
+
+	public static final int DIFFICULTY_EASY = 0;
+	public static final int DIFFICULTY_MEDIUM = 1;
+	public static final int DIFFICULTY_HARD = 2;
+
+	public static final long TIME_ATTACK_TIME = 60000; // millisecs
+
+	int currentScore = 0;
+	public static int MODE_SURVIVAL = 0;
+	public static int MODE_NORMAL = 1;
+	public static int MODE_TIME_ATTACK = 2;
+	public static int MODE_SURVIVAL_TIME_ATTACK = 3;
+	int[] IndexList;
+	ArrayList<String> words = new ArrayList<String>();
+	int index;
+
+	public EditText name_field;
+
+	LetterClickListener letterClickListener = new LetterClickListener();
+
+	public int gameMode;
+	TextView hiddenText;
+	TextView hintText;
+	TextView enteredText;
+	TextView scorText;
+	EditText input;
+	RelativeLayout background;
+
+	Button backBtn;
+	Button newGameBtn;
+	LetterButton letterA;
+	LetterButton letterB;
+	LetterButton letterC;
+	LetterButton letterD;
+	LetterButton letterE;
+	LetterButton letterF;
+	LetterButton letterG;
+	LetterButton letterH;
+	LetterButton letterI;
+	LetterButton letterJ;
+	LetterButton letterK;
+	LetterButton letterL;
+	LetterButton letterM;
+	LetterButton letterN;
+	LetterButton letterO;
+	LetterButton letterP;
+	LetterButton letterQ;
+	LetterButton letterR;
+	LetterButton letterS;
+	LetterButton letterT;
+	LetterButton letterU;
+	LetterButton letterV;
+	LetterButton letterW;
+	LetterButton letterX;
+	LetterButton letterY;
+	LetterButton letterZ;
+
+	ArrayList<LetterButton> buttonList = new ArrayList<LetterButton>();
+
+	HangmanCountDownTimer mTimer;
+	MediaPlayer mpTimeAttack;
+	MediaPlayer mpNormal;
+	MediaPlayer mpDeath;
+	MediaPlayer mpButtonClick;
+	TextView mChronometer;
+	// text stocheaza cuvintele ascunse
+	String text;
+	// indiciu
+	String hint;
+	// evidenta a literelor introduse
+	String entered = " ";
+	// contor de erori
+	String scor;
+	int count;
+	// nivelul de dificultate
+	// 0 pentru usor
+	// 1 pentru normal
+	// 2 pentru greu
+	// -1 pentru continuare (datele sunt salvate in variabilele principale(text,
+	// entered, count)
+	int diff;
+	boolean onScreenKeyBoard, soundEnabled;
+
+	protected void loadSettings() {
+		SharedPreferences settings = getSharedPreferences(
+				Settings.SETTING_FILENAME, MODE_PRIVATE);
+
+		onScreenKeyBoard = settings.getBoolean(
+				Settings.SETTING_ON_SCREEN_KEYBOARD, true);
+		soundEnabled = settings
+				.getBoolean(Settings.SETTING_SOUND_ENABLED, true);
+	}
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+				WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+		mGoogleClient = new GoogleApiClient.Builder(this, this, this)
+				.addApi(Games.API).addScope(Games.SCOPE_GAMES)
+				.setGravityForPopups(Gravity.TOP | Gravity.CENTER_HORIZONTAL)
+				.build();
+		loadSettings();
+		// Google Game
+		if (onScreenKeyBoard)
+			setContentView(R.layout.game2);
+		else
+			setContentView(R.layout.game);
+
+		name_field = new EditText(this);
+		try {
+			AdaugaCuvinte();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		randomizeText();
+		mpButtonClick = MediaPlayer.create(this, R.raw.button_click);
+		// ia nivelul de dificultate
+		diff = getIntent().getIntExtra(KEY_DIFFICULTY, -1);
+		gameMode = getIntent().getIntExtra(GAME_MODE, -1);
+
+		// ia un cuvant ascuns nou
+		String texthint = getText();
+		String[] pair = texthint.split("#");
+		text = pair[0];
+		hint = pair[1];
+		String c;
+		if (text.charAt(0) != text.charAt(text.length() - 1))
+			c = "" + text.charAt(0) + text.charAt(text.length() - 1);
+		else
+			c = "" + text.charAt(0);
+		entered += c;
+		mChronometer = (TextView) findViewById(R.id.mChronometer);
+
+		// asambleaza interfata utilizatorului
+		hintText = (TextView) findViewById(R.id.hint_txt);
+		hintText.setText(hint);
+
+		hiddenText = (TextView) findViewById(R.id.hidden_txt);
+		hiddenText.setText(encodeString(text, "*"));
+
+		enteredText = (TextView) findViewById(R.id.entered_txt);
+		enteredText.setVisibility(View.INVISIBLE);
+		enteredText.setText(entered);
+
+		scorText = (TextView) findViewById(R.id.scor_txt);
+		scorText.setText(scor);
+
+		Typeface tf = Typeface.createFromAsset(getAssets(),
+				"fonts/GosmickSansBold.ttf");
+
+		hintText.setTypeface(tf);
+		hiddenText.setTypeface(tf);
+		enteredText.setTypeface(tf);
+		scorText.setTypeface(tf);
+		mChronometer.setTypeface(tf);
+
+		background = (RelativeLayout) findViewById(R.id.rela);
+		mTimer = null;
+		count = setDifficulty(diff); // contorul setare dificultate
+		changeImage(count); // contorul imaginilor
+		if (onScreenKeyBoard) {
+			letterA = (LetterButton) findViewById(R.id.letterA);
+			// setOnClickHandler(letterA);
+			letterB = (LetterButton) findViewById(R.id.letterB);
+			// setOnClickHandler(letterB);
+			letterC = (LetterButton) findViewById(R.id.letterC);
+			// setOnClickHandler(letterC);
+			letterD = (LetterButton) findViewById(R.id.letterD);
+			// setOnClickHandler(letterD);
+			letterE = (LetterButton) findViewById(R.id.letterE);
+			// setOnClickHandler(letterE);
+			letterF = (LetterButton) findViewById(R.id.letterF);
+			// setOnClickHandler(letterF);
+			letterG = (LetterButton) findViewById(R.id.letterG);
+			// setOnClickHandler(letterG);
+			letterH = (LetterButton) findViewById(R.id.letterH);
+			// setOnClickHandler(letterH);
+			letterI = (LetterButton) findViewById(R.id.letterI);
+			// setOnClickHandler(letterI);
+			letterJ = (LetterButton) findViewById(R.id.letterJ);
+			// setOnClickHandler(letterJ);
+			letterK = (LetterButton) findViewById(R.id.letterK);
+			// setOnClickHandler(letterK);
+			letterL = (LetterButton) findViewById(R.id.letterL);
+			// setOnClickHandler(letterL);
+			letterM = (LetterButton) findViewById(R.id.letterM);
+			// setOnClickHandler(letterM);
+			letterN = (LetterButton) findViewById(R.id.letterN);
+			// setOnClickHandler(letterN);
+			letterO = (LetterButton) findViewById(R.id.letterO);
+			// setOnClickHandler(letterO);
+			letterP = (LetterButton) findViewById(R.id.letterP);
+			// setOnClickHandler(letterP);
+			letterQ = (LetterButton) findViewById(R.id.letterQ);
+			// setOnClickHandler(letterQ);
+			letterR = (LetterButton) findViewById(R.id.letterR);
+			// setOnClickHandler(letterR);
+			letterS = (LetterButton) findViewById(R.id.letterS);
+			// setOnClickHandler(letterS);
+			letterT = (LetterButton) findViewById(R.id.letterT);
+			// setOnClickHandler(letterT);
+			letterU = (LetterButton) findViewById(R.id.letterU);
+			// setOnClickHandler(letterU);
+			letterV = (LetterButton) findViewById(R.id.letterV);
+			// setOnClickHandler(letterV);
+			letterW = (LetterButton) findViewById(R.id.letterW);
+			// setOnClickHandler(letterW);
+			letterX = (LetterButton) findViewById(R.id.letterX);
+			// setOnClickHandler(letterX);
+			letterY = (LetterButton) findViewById(R.id.letterY);
+			// setOnClickHandler(letterY);
+			letterZ = (LetterButton) findViewById(R.id.letterZ);
+			// setOnClickHandler(letterZ);
+			buttonList.add(letterA);
+			buttonList.add(letterB);
+			buttonList.add(letterC);
+			buttonList.add(letterD);
+			buttonList.add(letterE);
+			buttonList.add(letterF);
+			buttonList.add(letterG);
+			buttonList.add(letterH);
+			buttonList.add(letterI);
+			buttonList.add(letterJ);
+			buttonList.add(letterK);
+			buttonList.add(letterL);
+			buttonList.add(letterM);
+			buttonList.add(letterN);
+			buttonList.add(letterO);
+			buttonList.add(letterP);
+			buttonList.add(letterQ);
+			buttonList.add(letterR);
+			buttonList.add(letterS);
+			buttonList.add(letterT);
+			buttonList.add(letterU);
+			buttonList.add(letterV);
+			buttonList.add(letterX);
+			buttonList.add(letterY);
+			buttonList.add(letterZ);
+			buttonList.add(letterW);
+			setOnClickHandler();
+		}
+		if (gameMode == MODE_SURVIVAL_TIME_ATTACK) {
+			if (mTimer == null) {
+				mTimer = new HangmanCountDownTimer(TIME_ATTACK_TIME);
+				mTimer.start();
+			}
+		} else if (gameMode == MODE_SURVIVAL) {
+			mChronometer.setVisibility(View.INVISIBLE);
+			scorText.setVisibility(View.VISIBLE);
+		} else if (gameMode == MODE_TIME_ATTACK) {
+			if (mTimer == null) {
+				mTimer = new HangmanCountDownTimer(TIME_ATTACK_TIME);
+				mTimer.start();
+				scorText.setVisibility(View.INVISIBLE);
+			}
+		} else {
+			mChronometer.setVisibility(View.INVISIBLE);
+			scorText.setVisibility(View.INVISIBLE);
+		}
+
+		// setare input
+		input = (EditText) findViewById(R.id.input_txt);
+		if (input != null) {
+			input.setFocusable(true);
+			input.setOnKeyListener(new OnKeyListener() {
+
+				public boolean onKey(View v, int keyCode, KeyEvent event) {
+
+					String temp;
+					String newLetter = "&";
+
+					if (input.getText().length() == 0)
+						return false;
+
+					newLetter = input.getText().subSequence(0, 1).toString()
+							.toUpperCase(Locale.getDefault());
+
+					input.setText(""); // sterge textul tastat
+
+					if (!((newLetter.charAt(0) >= 'A' && newLetter.charAt(0) <= 'Z')))
+						return false;
+
+					temp = (String) enteredText.getText();
+					if (temp.indexOf(newLetter.toUpperCase()) >= 0) {
+						input.setText("");
+						return false;
+					}
+					gameRules(newLetter);
+					return false;
+				}
+
+			});
+		}
+
+		ImageView backBtn = (ImageView) findViewById(R.id.btn_back);
+		backBtn.setOnClickListener(new View.OnClickListener() {
+
+			public void onClick(View v) {
+				mpButtonClick.start();
+				finish();
+			}
+		});
+
+		ImageView newGameBtn = (ImageView) findViewById(R.id.btn_newGame);
+		newGameBtn.setOnClickListener(new View.OnClickListener() {
+			// Creare joc nou
+			public void onClick(View v) {
+				mpButtonClick.start();
+
+				Toast.makeText(getApplicationContext(),
+						"Se inițiază o tură nouă de joc", Toast.LENGTH_SHORT)
+						.show();
+				new AlertDialog.Builder(Game.this)
+						.setTitle("Select difficulty.")
+						.setItems(R.array.difficulty,
+								new DialogInterface.OnClickListener() {
+									public void onClick(
+											DialogInterface dialoginterface,
+											int i) {
+										startGame(i);
+									}
+								})
+
+						.show();
+			}
+		});
+
+	}
+
+	public boolean gameRules(String newLetter) {
+
+		entered += newLetter.toUpperCase(Locale.getDefault()); // adauga litera
+																// la stringul
+		// introdus
+		enteredText.setText(enteredText.getText() + newLetter.toUpperCase());
+		hiddenText.setText(encodeString(text, newLetter.toUpperCase()));
+
+		// Verifica daca ai castigat
+		if (win(text)) {
+			if (gameMode != MODE_SURVIVAL
+					&& gameMode != MODE_SURVIVAL_TIME_ATTACK) {
+				Toast.makeText(getApplicationContext(),
+						"Congratulations!\n\t You Won!", Toast.LENGTH_LONG)
+						.show();
+				changeImage(999);
+				if (input != null)
+					input.setFocusable(false);
+
+			}
+			if (gameMode == MODE_SURVIVAL) {
+
+				String texthint = getText();
+				String[] pair = texthint.split("#");
+				String c;
+				text = pair[0];
+				hint = pair[1];
+
+				hintText.setText(hint);
+				scorText.setText(scor);
+
+				if (text.charAt(0) != text.charAt(text.length() - 1))
+					c = "" + text.charAt(0) + text.charAt(text.length() - 1);
+				else
+					c = "" + text.charAt(0);
+				entered = " " + c;
+				hiddenText.setText(encodeString(text, "*"));
+				enteredText.setText(entered);
+				makeAllVisible();
+
+				currentScore = currentScore + 100;
+
+				scorText.setText(Integer.toString(currentScore));
+
+				return false;
+
+			}
+			if (gameMode == MODE_SURVIVAL_TIME_ATTACK) {
+
+				String texthint = getText();
+				String[] pair = texthint.split("#");
+				text = pair[0];
+				hint = pair[1];
+
+				hintText.setText(hint);
+				scorText.setText(scor);
+
+				String c;
+
+				if (text.charAt(0) != text.charAt(text.length() - 1))
+					c = "" + text.charAt(0) + text.charAt(text.length() - 1);
+				else
+					c = "" + text.charAt(0);
+				entered = " " + c;
+				hiddenText.setText(encodeString(text, "*"));
+				enteredText.setText(entered);
+				makeAllVisible();
+
+				int secondsleft = 0;
+				if (mTimer != null) {
+					secondsleft = mTimer.getSecondsLeft();
+					mTimer.cancel();
+				}
+
+				currentScore = currentScore + 100 + secondsleft;
+				scorText.setText(Integer.toString(currentScore));
+
+				mTimer = new HangmanCountDownTimer(TIME_ATTACK_TIME);
+				mTimer.start();
+				return false;
+
+			}
+			if (gameMode == MODE_TIME_ATTACK) {
+
+				Toast.makeText(getApplicationContext(),
+						"Congratulations!\n\t You Won!", Toast.LENGTH_LONG)
+						.show();
+				changeImage(999);
+				if (input != null)
+					input.setFocusable(false);
+			}
+
+		}
+		// daca litera nu a fost gasita atunci decrementeaza numaratorul
+		if (text.indexOf(newLetter.toUpperCase()) == -1) {
+			count--;
+			currentScore--;
+
+			scorText.setText(Integer.toString(currentScore));
+			changeImage(count); // schimba imaginea si deseneaza corp nou
+		}
+		// jocul a luat sfarsit daca nu mai aveti incercari
+		if (count == 0) {
+			Toast.makeText(getApplicationContext(), "Game Over",
+					Toast.LENGTH_LONG).show();
+			hiddenText.setText(encodeString(text, "#")); // afisare cuvant
+															// ascuns
+			if (input != null)
+				input.setFocusable(false); // nu mai sunt indicii
+		}
+		return false;
+
+	}
+
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		MenuInflater meniu = getMenuInflater();
+		meniu.inflate(R.menu.main_menu, menu);
+		return true;
+	}
+
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int itemId = item.getItemId();
+		if (itemId == R.id.Setari) {
+			mpButtonClick.start();
+			Intent aboutIntent = new Intent(Game.this,
+					com.fundora.hangman.Settings.class);
+			Game.this.startActivity(aboutIntent);
+			return true;
+		} else if (itemId == R.id.Exit) {
+			mpButtonClick.start();
+			super.onDestroy();
+			this.finish();
+			return true;
+		}
+		return false;
+	}
+
+	public void setOnClickHandler() {
+		for (LetterButton b : buttonList) {
+			b.setOnClickListener(letterClickListener);
+		}
+	}
+
+	protected void makeAllVisible() {
+		for (LetterButton b : buttonList) {
+			b.setVisibility(View.VISIBLE);
+		}
+	}
+
+	protected void makeAllInVisible() {
+		for (LetterButton b : buttonList) {
+			b.setVisibility(View.INVISIBLE);
+		}
+	}
+
+	@Override
+	protected void onResume() {
+		super.onResume();
+	}
+
+	@Override
+	protected void onPause() {
+		super.onPause();
+
+		// Salveaza jocul curent
+		String old_entered = this.entered;
+		String old_text = this.text;
+		String old_hint = this.hint;
+		String old_scor = this.scorText.getText().toString();
+		int old_count = this.count;
+
+		SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+		SharedPreferences.Editor editor = settings.edit();
+		editor.putString("old_text", old_text);
+		editor.putString("old_entered", old_entered);
+		editor.putString("old_hint", old_hint);
+		editor.putString("old_scor", old_scor);
+		editor.putInt("old_count", old_count);
+		editor.putInt("old_GAME_MODE", this.gameMode);
+		if (gameMode == MODE_SURVIVAL_TIME_ATTACK
+				|| gameMode == MODE_TIME_ATTACK) {
+			editor.putLong("old_time_left", mTimer.getMillisecondsLeft());
+			mTimer.cancel();
+		}
+		editor.commit();
+
+		getIntent().putExtra(KEY_DIFFICULTY, -1);
+		// daca dificultatea e pusa pe -1 atunci daca jocul e pe pauza, jocul va
+		// continua de pe salvare
+	}
+
+	private String encodeString(String target, String letter) {
+		String result = "";
+		if (letter.contains("*")) { // in acest caz cuvantul are toate literele
+									// ascunse
+			for (int i = 0; i < target.length(); i++) {
+				if (target.charAt(i) == letter.charAt(0)) {
+					result += target.charAt(i) + " ";
+				} else if (entered.indexOf(target.charAt(i)) != -1) {
+					result += target.charAt(i) + " ";
+				} else
+					result += "_ ";
+
+			}
+			return result;
+		} else if (letter.contains("#")) { // acest caz va dezvalui toate
+											// literele ascunse, se intampla
+											// cand jucatorul pierde
+			for (int i = 0; i < target.length(); i++) {
+				result += target.charAt(i) + " ";
+			}
+			return result;
+		} else { // in acest caz se vor dezvalui toate literele ascunse
+			for (int i = 0; i < target.length(); i++) {
+				if (target.charAt(i) == letter.charAt(0)) {
+					result += target.charAt(i) + " ";
+					currentScore++;
+					scorText.setText(Integer.toString(currentScore));
+				} else if (entered.indexOf(target.charAt(i)) != -1) {
+					result += target.charAt(i) + " ";
+				} else
+					result += "_ ";
+
+			}
+			return result;
+		}
+
+	}
+
+	private boolean win(String text) {
+		if (text.length() > 0 && entered.length() > 0) {
+			for (int i = 0; i < text.length(); i++) {
+				if (entered.indexOf(text.charAt(i)) == -1) {
+					return false;
+				}
+			}
+			return true;
+		}
+		return false;
+	}
+
+	private void changeImage(int count) {
+		switch (count) {
+		case 6:
+			background.setBackgroundResource(R.drawable.game0);
+			break;
+		case 5:
+			background.setBackgroundResource(R.drawable.game1);
+			break;
+		case 4:
+			background.setBackgroundResource(R.drawable.game2);
+			break;
+		case 3:
+			background.setBackgroundResource(R.drawable.game3);
+			break;
+		case 2:
+			background.setBackgroundResource(R.drawable.game4);
+			break;
+		case 1:
+			background.setBackgroundResource(R.drawable.game5);
+			break;
+		case 0:
+			background.setBackgroundResource(R.drawable.gamefinal);
+			if (mTimer != null)
+				mTimer.cancel();
+			startActivityForResult(Games.Leaderboards.getLeaderboardIntent(getApiClient(), "leaderboard_id"), 5000);
+			makeAllInVisible();
+			break;
+		case 999:
+			background.setBackgroundResource(R.drawable.gamewin);
+			if (mTimer != null)
+				mTimer.cancel();
+			makeAllInVisible();
+			break;
+
+		default:
+			background.setBackgroundResource(R.drawable.game0);
+			break;
+		}
+	}
+
+	private int setDifficulty(int dif) {
+		switch (dif) {
+		case -1:
+			// dificultatea e pe -1, asta inseamna ca va incarca o salvare de
+			// joc
+			SharedPreferences settings = getSharedPreferences(PREFS_NAME, 0);
+			String old_text = settings.getString("old_text", text);
+			String old_entered = settings.getString("old_entered", "");
+			String old_hint = settings.getString("old_hint", hint);
+			String old_scor = settings.getString("old_scor", scor);
+			gameMode = settings.getInt("old_GAME_MODE", MODE_NORMAL);
+			if (gameMode == MODE_SURVIVAL_TIME_ATTACK
+					|| gameMode == MODE_TIME_ATTACK) {
+				mTimer = new HangmanCountDownTimer(settings.getLong(
+						"old_time_left", TIME_ATTACK_TIME));
+				mTimer.start();
+			}
+			int old_count = settings.getInt("old_count", 6);
+
+			this.text = old_text;
+			this.entered = old_entered;
+			this.count = old_count;
+			this.hint = old_hint;
+			this.scor = old_scor;
+			scorText.setText(scor);
+
+			enteredText.setText(entered);
+			hintText.setText(hint);
+			if (entered.length() > 0) {
+				for (int i = 0; i < entered.length(); i++) {
+					hiddenText.setText(encodeString(text, entered.charAt(i)
+							+ ""));
+				}
+			}
+			changeImage(count);
+			return count;
+		case 0:
+			return 6;
+		case 1:
+			return 5;
+		case 2:
+			return 4;
+		default:
+			return 6;
+		}
+	}
+
+	private String getText() {
+
+		if (index < words.size()) {
+			index++;
+			return words.get(IndexList[index - 1]);
+		} else {
+			randomizeText();
+			return getText();
+		}
+
+	}
+
+	public void updateScore() {
+		if (gameMode != MODE_SURVIVAL && gameMode != MODE_SURVIVAL_TIME_ATTACK)
+			return;
+		SQLiteDatabase db = (new HighScoreOpenHelper(this))
+				.getWritableDatabase();
+		String table;
+
+		if (gameMode == MODE_SURVIVAL) {
+			switch (diff) {
+			case DIFFICULTY_HARD:
+				table = HighScoreOpenHelper.HARD_TABLE_NAME;
+				break;
+			case DIFFICULTY_MEDIUM:
+				table = HighScoreOpenHelper.MEDIUM_TABLE_NAME;
+				break;
+			default:
+				table = HighScoreOpenHelper.EASY_TABLE_NAME;
+				break;
+			}
+		} else {
+			switch (diff) {
+			case DIFFICULTY_HARD:
+				table = HighScoreOpenHelper.HARD_TABLE_NAME_TIMEATTACK;
+				break;
+			case DIFFICULTY_MEDIUM:
+				table = HighScoreOpenHelper.MEDIUM_TABLE_NAME_TIME_ATTACK;
+				break;
+			default:
+				table = HighScoreOpenHelper.EASY_TABLE_NAME_TIME_ATTACK;
+				break;
+			}
+		}
+		long score = Long.parseLong(scorText.getText().toString());
+		Cursor cursor = db.query(table, null, null, null, null, null, "score");
+
+		if (cursor.getCount() >= HighScoreOpenHelper.MAX_ENTRIES) {
+			cursor.moveToLast();
+			if (score > cursor.getLong(2))
+				addHighScore(table, score, db);
+		} else {
+			addHighScore(table, score, db);
+
+		}
+		cursor.close();
+	}
+
+	public void addHighScore(final String table, final long score,
+			final SQLiteDatabase db) {
+
+		new AlertDialog.Builder(this)
+				.setTitle("Congratulations!")
+				.setMessage(
+						"Your score is: " + scorText.getText()
+								+ "\nPlease enter your name")
+				.setView(name_field)
+				.setPositiveButton("Ok", new DialogInterface.OnClickListener() {
+					public void onClick(DialogInterface dialog, int whichButton) {
+						String name = name_field.getText().toString();
+						if (name.compareTo("") == 0)
+							name = "Anonymous";
+						db.execSQL("INSERT INTO " + table + "VALUES(?,'" + name
+								+ "'," + score + ")");
+
+						Intent intent = new Intent(Game.this,
+								ScoreActivity.class);
+
+						intent.putExtra(ScoreActivity.EXTRA_DIFFICULTY, diff);
+
+						startActivity(intent);
+						db.close();
+						finish();
+					}
+				})
+				.setNegativeButton("Cancel",
+						new DialogInterface.OnClickListener() {
+							public void onClick(DialogInterface dialog,
+									int whichButton) {
+
+							}
+						}).show();
+
+	}
+
+	public void AdaugaCuvinte() throws IOException {
+		InputStream database = getResources().openRawResource(R.raw.database);
+		BufferedReader bufferedReader = new BufferedReader(
+				new InputStreamReader(database));
+		String myLine;
+		while ((myLine = bufferedReader.readLine()) != null)
+			words.add(myLine);
+	}
+
+	private void randomizeText() {
+
+		// toate cuvintele ascunse
+
+		index = 0;
+
+		IndexList = new int[words.size()];
+		Random generator = new Random();
+
+		for (int i = 0; i < words.size(); i++) {
+			IndexList[i] = generator.nextInt(words.size());
+			for (int j = 0; j < i; j++)
+				if (IndexList[i] == IndexList[j])
+					i--;
+		}
+
+	}
+
+	private void startGame(int i) {
+		Intent intent = new Intent(Game.this, com.fundora.hangman.Game.class);
+		intent.putExtra(Game.KEY_DIFFICULTY, i);
+		intent.putExtra(Game.GAME_MODE, gameMode);
+		startActivity(intent);
+
+		finish();
+	}
+
+	public class HangmanCountDownTimer extends CountDownTimer {
+
+		int min;
+		int sec;
+
+		public HangmanCountDownTimer(long millisInFuture) {
+			super(millisInFuture, 1000);
+			setTimeLeft(millisInFuture);
+		}
+
+		public void setTimeLeft(long millisInFuture) {
+			// TODO Auto-generated method stub
+			min = (int) (millisInFuture / 60000);
+			sec = (int) (millisInFuture / 1000) % 60;
+		}
+
+		public long getMillisecondsLeft() {
+			return sec * 1000 + min * 60000;
+		}
+
+		@Override
+		public void onTick(long millisUntilFinished) {
+			// TODO Auto-generated method stub
+			if (sec > 0)
+				sec--;
+			else {
+
+				if (min > 0) {
+					min--;
+					sec = 59;
+				}
+			}
+			mChronometer.setText(min + ":" + sec);
+		}
+
+		@Override
+		public void onFinish() {
+			Toast.makeText(getApplicationContext(), "You ran out of time!",
+					Toast.LENGTH_LONG).show();
+			hiddenText.setText(encodeString(text, "#")); // afisare cuvant
+															// ascuns
+			background.setBackgroundResource(R.drawable.gamefinal);
+			if (input != null)
+				input.setFocusable(false); // nu mai sunt indicii
+			mChronometer.setText("0:0");
+			makeAllInVisible();
+			updateScore();
+		}
+
+		public int getSecondsLeft() {
+			return min * 60 + sec;
+		}
+	}
+
+	protected class LetterClickListener implements View.OnClickListener {
+
+		String newLetter;
+		String temp;
+
+		public void onClick(View v) {
+			// TODO Auto-generated method stub
+			v.setVisibility(View.INVISIBLE);
+			newLetter = ((LetterButton) v).getLetter().subSequence(0, 1)
+					.toString().toUpperCase(Locale.getDefault());
+
+			temp = (String) enteredText.getText();
+			if (temp.indexOf(newLetter.toUpperCase(Locale.getDefault())) >= 0) {
+				if (input != null)
+					input.setText("");
+				return;
+			}
+
+			gameRules(newLetter);
+			return;
+		}
+
+	}
+
+	@Override
+	public void onStart() {
+		super.onStart();
+		// Here is a good place to connect with Google Api
+		mGoogleClient.connect();
+	}
+
+	public void onConnectionFailed(ConnectionResult arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onConnected(Bundle arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+	public void onConnectionSuspended(int arg0) {
+		// TODO Auto-generated method stub
+
+	}
+
+}

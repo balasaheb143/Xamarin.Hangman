@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@drawable/game6" >
+	 <LinearLayout
+        android:id="@+id/ModeButtons"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true" >
+        
+    <com.fundora.hangman.SelectableTextView
+        android:id="@+id/modeSurvival"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginLeft="28dp"
+        android:layout_marginRight="28dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:background="@color/transparentwhite"
+        android:padding="10dp"
+        android:text="Survival"
+        android:textColor="@color/black" />
+
+    <com.fundora.hangman.SelectableTextView
+        android:id="@+id/modeSurvivalTimeAttack"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:layout_marginLeft="28dp"
+        android:layout_marginRight="28dp"
+        android:layout_marginTop="10dp"
+        android:layout_marginBottom="10dp"
+        android:background="@color/transparentwhite"
+        android:padding="10dp"
+        android:text="Time Attack"
+        android:textColor="@color/black" />
+
+   </LinearLayout>
+    
+    <LinearLayout
+        android:id="@+id/ScorButtons"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content" 
+        android:layout_below="@+id/ModeButtons"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true">
+
+        <com.fundora.hangman.SelectableTextView
+            android:id="@+id/mediumScore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:background="@color/transparentwhite"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="Medium"
+            android:textColor="@color/black" />
+
+        <com.fundora.hangman.SelectableTextView
+            android:id="@+id/easyScore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_weight="1"
+            android:background="@color/transparentwhite"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="Easy"
+            android:textColor="@color/black" />
+
+        <com.fundora.hangman.SelectableTextView
+            android:id="@+id/hardScore"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:layout_weight="1"
+            android:background="@color/transparentwhite"
+            android:gravity="center"
+            android:padding="10dp"
+            android:text="Hard"
+            android:textColor="@color/black" />
+    </LinearLayout>
+
+    <ScrollView
+        android:id="@+id/scrollView1"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentRight="true"
+        android:layout_below="@+id/ScorButtons"
+        android:layout_marginLeft="18dp"
+        android:layout_marginRight="18dp"
+        android:layout_marginTop="16dp" >
+
+        <RelativeLayout
+            android:id="@+id/relativeLayout1"
+            android:layout_width="match_parent"
+            android:layout_height="340dp" >
+
+            <TextView
+                android:id="@+id/scoreText"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_alignParentLeft="true"
+                android:layout_alignParentRight="true"
+                android:layout_alignParentTop="true"
+                android:background="@color/transparentwhite"
+                android:gravity="center"
+                android:singleLine="false"
+                android:text="text\ntext"
+                android:textColor="@color/black" />
+        </RelativeLayout>
+    </ScrollView>
+
+</RelativeLayout>

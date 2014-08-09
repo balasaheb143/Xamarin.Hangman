@@ -1,0 +1,219 @@
+package com.fundora.hangman.activities;
+
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+
+import android.content.Intent;
+import android.graphics.Typeface;
+import android.media.MediaPlayer;
+import android.os.Bundle;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.Button;
+import android.widget.Chronometer;
+
+import com.fundora.hangman.R;
+import com.google.example.games.basegameutils.BaseGameActivity;
+
+public class MainMenuActivity extends BaseGameActivity implements View.OnClickListener {
+
+	Button btnContinue;
+	Button btnNewGame;
+	Button btnHighScore;
+
+	Button btnAbout;
+	Button btnExit;
+
+//	MediaPlayer mpHangman;
+	MediaPlayer mpButtonClick;
+	Chronometer mChronometer;
+	boolean HardwareKeyboard = true, TouchScreenKeyboard = true;
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		// requestWindowFeature(Window.FEATURE_NO_TITLE);
+		// getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+		// WindowManager.LayoutParams.FLAG_FULLSCREEN);
+		setContentView(R.layout.activity_mainmenu);
+
+		initializeUI();
+	}
+
+	void initializeUI() {
+		try {
+			findViewById(R.id.sign_in_button).setOnClickListener(this);
+			findViewById(R.id.sign_out_button).setOnClickListener(this);
+
+			// if (DEBUG_BUILD) {
+			enableDebugLog(true, "MainMenuActivity");
+			// }
+
+			if (isSignedIn()) {
+				findViewById(R.id.sign_in_button).setVisibility(View.GONE);
+				findViewById(R.id.sign_out_button).setVisibility(View.VISIBLE);
+			} else {
+				findViewById(R.id.sign_in_button).setVisibility(View.VISIBLE);
+				findViewById(R.id.sign_out_button).setVisibility(View.GONE);
+			}
+
+//			mpHangman = MediaPlayer.create(MainMenuActivity.this, R.raw.logo);
+//			mpHangman.start();
+//			mpHangman.setLooping(true);
+//			
+			mpButtonClick = MediaPlayer.create(this, R.raw.button_click);
+
+			btnContinue = (Button) findViewById(R.id.continue_button);
+			btnNewGame = (Button) findViewById(R.id.new_button);
+			btnAbout = (Button) findViewById(R.id.about_button);
+			btnExit = (Button) findViewById(R.id.exit_button);
+
+			Typeface tf = Typeface.createFromAsset(getAssets(),
+					"fonts/GosmickSansBold.ttf");
+
+			btnContinue.setTypeface(tf);
+			btnNewGame.setTypeface(tf);
+			btnAbout.setTypeface(tf);
+			btnExit.setTypeface(tf);
+
+			btnContinue.setOnClickListener(new View.OnClickListener() {
+				public void onClick(View v) {
+					// -1 game will continue from save
+					mpButtonClick.start();
+					startGame(-1, GameActivity.MODE_NORMAL);
+				}
+			});
+
+			btnNewGame.setOnClickListener(new View.OnClickListener() {
+				public void onClick(View v) {
+					mpButtonClick.start();
+					Intent gamemodesIntent = new Intent(
+							MainMenuActivity.this,
+							com.fundora.hangman.activities.GameModesActivity.class);
+					MainMenuActivity.this.startActivity(gamemodesIntent);
+
+				}
+			});
+
+			btnAbout.setOnClickListener(new View.OnClickListener() {
+				public void onClick(View v) {
+					mpButtonClick.start();
+					Intent aboutIntent = new Intent(MainMenuActivity.this,
+							AboutActivity.class);
+					MainMenuActivity.this.startActivity(aboutIntent);
+				}
+			});
+
+			btnExit.setOnClickListener(new View.OnClickListener() {
+
+				public void onClick(View v) {
+					mpButtonClick.start();
+					android.os.Process.killProcess(android.os.Process.myPid());
+				}
+			});
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		MenuInflater meniu = getMenuInflater();
+		meniu.inflate(R.menu.main_menu, menu);
+		return true;
+	}
+
+	public boolean onOptionsItemSelected(MenuItem item) {
+		int itemId = item.getItemId();
+		if (itemId == R.id.menu_settings) {
+			mpButtonClick.start();
+			Intent aboutIntent = new Intent(MainMenuActivity.this,
+					com.fundora.hangman.activities.SettingsActivity.class);
+			MainMenuActivity.this.startActivity(aboutIntent);
+			return true;
+		} else if (itemId == R.id.Exit) {
+			mpButtonClick.start();
+			android.os.Process.killProcess(android.os.Process.myPid());
+			return true;
+		}
+		return false;
+	}
+
+	void loadSettings() {
+		String collected = null;
+		FileInputStream fis = null;
+		try {
+			fis = openFileInput(SettingsActivity.FILENAME);
+			byte[] dataArray = new byte[fis.available()];
+			while (fis.read(dataArray) != -1) {
+				collected = new String(dataArray);
+			}
+		} catch (FileNotFoundException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally {
+			try {
+				fis.close();
+				String[] setting = collected.split(";");
+				HardwareKeyboard = Boolean.parseBoolean(setting[0]);
+				TouchScreenKeyboard = Boolean.parseBoolean(setting[1]);
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private void startGame(int i, int gamemode) {
+		Intent intent = new Intent(MainMenuActivity.this,
+				com.fundora.hangman.activities.GameActivity.class);
+		intent.putExtra(GameActivity.KEY_DIFFICULTY, i);
+		intent.putExtra(GameActivity.GAME_MODE, gamemode);
+		startActivity(intent);
+	}
+
+	public void onSignInFailed() {
+		try {
+			findViewById(R.id.sign_in_button).setVisibility(View.VISIBLE);
+			findViewById(R.id.sign_out_button).setVisibility(View.GONE);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public void onSignInSucceeded() {
+		try {
+			findViewById(R.id.sign_in_button).setVisibility(View.GONE);
+			findViewById(R.id.sign_out_button).setVisibility(View.VISIBLE);
+
+			// Games.Leaderboards.submitScore(getApiClient(), LB_ID, 12345);
+		} catch (Exception ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	public void onClick(View view) {
+		try {
+			if (view.getId() == R.id.sign_in_button) {
+				// start the asynchronous sign in flow
+				beginUserInitiatedSignIn();
+			} else if (view.getId() == R.id.sign_out_button) {
+				// sign out.
+				signOut();
+
+				// show sign-in button, hide the sign-out button
+				findViewById(R.id.sign_in_button).setVisibility(View.VISIBLE);
+				findViewById(R.id.sign_out_button).setVisibility(View.GONE);
+			}
+		} catch (Exception ex) {
+
+		}
+	}
+
+}

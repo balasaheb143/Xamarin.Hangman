@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<resources>
+
+    <string name="hello">Hello World, Hangman!</string>
+    <string name="app_name">Fundora Hangman</string>
+  
+    <string name="ACTIVITY_ABOUT_DESCRIPTION">Hangman is a word game where Android picks a word and the player needs to guess that word letter by letter, if the player gets the letter wrong a part of the hanged man is drawn.\n\n The player wins when he discovers every letter before the hanged man is drawn or before the time runs out. If not, he loses. \n\n Rules: \n\n 1. New Game. A new game is started, the standard edition with 3 difficulty levels (easy,normal,hard). \n\n 2. Survival. A game type in which the player must complete as many words as he can without doing any mistakes, the player can select the difficulty setting for the mistakes limit (easy,normal,hard)))n\n 3.Time Attack. A game type where the player needs to complete the word or sentence in the specified time limit. \n\n 4. Survival Time Attack: \n Just like Survival mode but with a Time Limit, also the remaining seconds add as points to the overall score.</string>
+    <string name="ACTIVITY_MAINMENU_NEWGAME">NEW GAME</string>
+    <string name="ACTIVITY_MAINMENU_CONTINUE">CONTINUE</string>
+    <string name="ACTIVITY_MAINMENU_ABOUT">ABOUT</string>
+    <string name="ACTIVITY_MAINMENU_EXIT">EXIT</string>
+    
+    <string name="ACTIVITY_GAMEMODES_CLASSIC">CLASSIC</string>
+    <string name="ACTIVITY_GAMEMODES_SURVIVAL">SURVIVAL</string>
+    <string name="ACTIVITY_GAMEMODES_TIMEATTACK">TIME ATTACK</string>
+    <string name="ACTIVITY_GAMEMODES_SURVIVAL_ATTACK">SURVIVAL ATTACK</string>
+    
+    <string name="back_btn">Back</string>
+    <string name="easy_label">Easy - 6 tries</string>
+    <string name="medium_label">Normal - 5 tries</string>
+    <string name="hard_label">Hard - 4 tries</string>
+
+</resources>

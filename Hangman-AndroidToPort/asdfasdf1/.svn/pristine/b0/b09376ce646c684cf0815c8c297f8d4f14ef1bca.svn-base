@@ -1,0 +1,160 @@
+package com.fundora.hangman.activities;
+
+import android.app.Activity;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
+import android.content.Intent;
+import android.graphics.Typeface;
+import android.media.MediaPlayer;
+import android.os.Bundle;
+import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
+import android.widget.Button;
+
+import com.fundora.hangman.R;
+
+public class GameModesActivity extends Activity{
+
+	Button classic;
+	Button btnsurvival_time_attack;
+	Button survival;
+	Button btnTimeAttack;
+
+	MediaPlayer mpButtonClick;
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
+				WindowManager.LayoutParams.FLAG_FULLSCREEN);
+
+		setContentView(R.layout.activity_gamemodes);
+
+		classic = (Button) findViewById(R.id.btn_classic);
+		btnsurvival_time_attack = (Button) findViewById(R.id.Survival_Attack);
+		survival = (Button) findViewById(R.id.Survival);
+		btnTimeAttack = (Button) findViewById(R.id.Time_Attack);
+
+		Typeface tf = Typeface.createFromAsset(getAssets(),
+				"fonts/GosmickSansBold.ttf");
+
+		classic.setTypeface(tf);
+		btnsurvival_time_attack.setTypeface(tf);
+		survival.setTypeface(tf);
+		btnTimeAttack.setTypeface(tf);
+
+		mpButtonClick = MediaPlayer.create(this, R.raw.button_click);
+
+		classic.setOnClickListener(new View.OnClickListener() {
+
+			public void onClick(View v) {
+				mpButtonClick.start();
+
+				// utilizatorul trebuie sa isi aleaga nivelul de dificultate
+				new AlertDialog.Builder(GameModesActivity.this)
+						.setTitle("Alege dificulatea")
+						.setItems(R.array.difficulty,
+								new DialogInterface.OnClickListener() {
+									public void onClick(
+											DialogInterface dialoginterface,
+											int i) {
+										// apeland functia startgame va lansa
+										// jocul cu nivelul de dificultate
+										// corespunzator
+										System.out.println("newGame dif=" + i);
+										
+										GameModesActivity.this.UnlockAchievement();
+										
+										startGame(i, GameActivity.MODE_NORMAL);
+										finish();
+									}
+								}).show();
+			}
+		});
+
+		btnTimeAttack.setOnClickListener(new View.OnClickListener() {
+
+			public void onClick(View v) {
+				mpButtonClick.start();
+
+				// utilizatorul trebuie sa isi aleaga nivelul de dificultate
+				new AlertDialog.Builder(GameModesActivity.this)
+						.setTitle("Alege dificulatea")
+						.setItems(R.array.difficulty,
+								new DialogInterface.OnClickListener() {
+									public void onClick(
+											DialogInterface dialoginterface,
+											int i) {
+										// apeland functia startgame va lansa
+										// jocul cu nivelul de dificultate
+										// corespunzator
+										System.out.println("timeAttack dif="
+												+ i);
+										startGame(i, GameActivity.MODE_TIME_ATTACK);
+										finish();
+									}
+								}).show();
+			}
+		});
+		survival.setOnClickListener(new View.OnClickListener() {
+
+			public void onClick(View v) {
+				mpButtonClick.start();
+				// utilizatorul trebuie sa isi aleaga nivelul de dificultate
+				new AlertDialog.Builder(GameModesActivity.this)
+						.setTitle("Alege dificulatea")
+						.setItems(R.array.difficulty,
+								new DialogInterface.OnClickListener() {
+									public void onClick(
+											DialogInterface dialoginterface,
+											int i) {
+										// apeland functia startgame va lansa
+										// jocul cu nivelul de dificultate
+										// corespunzator
+										startGame(i, GameActivity.MODE_SURVIVAL);
+										finish();
+									}
+								}).show();
+			}
+		});
+		btnsurvival_time_attack.setOnClickListener(new View.OnClickListener() {
+
+			public void onClick(View v) {
+				mpButtonClick.start();
+				// utilizatorul trebuie sa isi aleaga nivelul de dificultate
+				new AlertDialog.Builder(GameModesActivity.this)
+						.setTitle("Alege dificulatea")
+						.setItems(R.array.difficulty,
+								new DialogInterface.OnClickListener() {
+									public void onClick(
+											DialogInterface dialoginterface,
+											int i) {
+										// apeland functia startgame va lansa
+										// jocul cu nivelul de dificultate
+										// corespunzator
+										startGame(i,
+												GameActivity.MODE_SURVIVAL_TIME_ATTACK);
+										finish();
+									}
+								}).show();
+			}
+		});
+
+	}
+
+	private void startGame(int i, int gamemode) {
+		Intent intent = new Intent(GameModesActivity.this,
+				com.fundora.hangman.activities.GameActivity.class);
+		intent.putExtra(GameActivity.KEY_DIFFICULTY, i);
+		intent.putExtra(GameActivity.GAME_MODE, gamemode);
+		startActivity(intent);
+	}
+	
+	
+	private void UnlockAchievement() 
+	{
+//		Games.Achievements.unlock(getApiClient(), "my_achievement_id");
+	}
+}
