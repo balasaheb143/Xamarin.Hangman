@@ -12,16 +12,16 @@ using Android.Widget;
 
 namespace Fundora.Hangman.UI
 {
-    [Activity(Label = "ActivityMainMenu",  MainLauncher = true, Icon = "@drawable/icon")]
+    [Activity(Label = "Fundora Hangman", MainLauncher = true, Icon = "@drawable/icon")]
     public class ActivityMainMenu : Activity
     {
         protected override void OnCreate(Bundle bundle)
         {
             try
             {
+                base.OnCreate(bundle);
                 RequestWindowFeature(WindowFeatures.NoTitle);
                 Window.SetFlags(WindowManagerFlags.Fullscreen, WindowManagerFlags.Fullscreen);
-                base.OnCreate(bundle);
                 SetContentView(Resource.Layout.activity_main_menu);
             }
             catch (Exception ex)

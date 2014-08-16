@@ -8,7 +8,7 @@ using Android.Widget;
 using Android.OS;
 using com.edmodo.cropper;
 
-namespace Fundora.Hangman
+namespace Fundora.Hangman.UI
 {
     [Activity(Label = "Fundora Hangman", MainLauncher = false, Icon = "@drawable/icon")]
     public class MainActivity : Activity

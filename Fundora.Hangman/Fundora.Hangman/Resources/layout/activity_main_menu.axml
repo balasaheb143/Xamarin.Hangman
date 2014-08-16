@@ -1,102 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
-<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/scrollview"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/RelativeLayout1"
     android:layout_width="fill_parent"
-    android:layout_height="fill_parent">
-    <LinearLayout
-        android:id="@+id/mylayout"
-        android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:background="@drawable/background_main_menu"
+    android:orientation="horizontal"
+    android:weightSum="1">
+    <Button
+        android:id="@+id/sign_out_button"
+        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:focusableInTouchMode="true"
-        android:orientation="vertical"
-        android:paddingBottom="@dimen/activity_vertical_margin"
-        android:paddingLeft="@dimen/activity_horizontal_margin"
-        android:paddingRight="@dimen/activity_horizontal_margin"
-        android:paddingTop="@dimen/activity_vertical_margin"
-        tools:context=".MainActivity">
-        <TextView
-            android:id="@+id/title"
-            style="@style/RoboTheme"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            android:paddingBottom="25dp"
-            android:text="@string/title"
-            android:textSize="27sp" />
-        <com.edmodo.cropper.CropImageView xmlns:custom="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/CropImageView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="center"
-            custom:imageResource="@drawable/butterfly" />
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical"
-            android:paddingLeft="40dp"
-            android:paddingRight="40dp">
-            <Button
-                android:id="@+id/Button_rotate"
-                style="@style/RoboTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginBottom="5dp"
-                android:layout_marginTop="20dp"
-                android:paddingLeft="25dp"
-                android:paddingRight="25dp"
-                android:text="@string/rotate"
-                android:textColor="#33B5E5" />
-            <LinearLayout
-                android:id="@+id/showGuidelinesLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="10dp"
-                android:focusableInTouchMode="true"
-                android:orientation="horizontal">
-                <TextView
-                    android:id="@+id/showGuidelines"
-                    style="@style/RoboTheme"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:gravity="right"
-                    android:text="@string/showGuidelines" />
-                <LinearLayout
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:orientation="horizontal">
-                    <Spinner
-                        android:id="@+id/showGuidelinesSpin"
-                        style="@style/RoboTheme"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:entries="@array/showGuidelinesArray"
-                        android:gravity="left" />
-                </LinearLayout>
-            </LinearLayout>
-            <Button
-                android:id="@+id/Button_crop"
-                style="@style/RoboTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:layout_marginBottom="5dp"
-                android:layout_marginTop="20dp"
-                android:paddingLeft="25dp"
-                android:paddingRight="25dp"
-                android:text="@string/crop"
-                android:textColor="#33B5E5"
-                android:textSize="30sp" />
-            <ImageView
-                android:id="@+id/croppedImageView"
-                style="@style/RoboTheme"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center|top"
-                android:contentDescription="@string/croppedImageDesc" />
-        </LinearLayout>
-    </LinearLayout>
-</ScrollView>
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="23dp"
+        android:text="Sign Out"
+        android:visibility="gone" />
+    <Button
+        android:id="@+id/new_button"
+        style="@style/style_hangman_newgame_button"
+        android:layout_width="200dp"
+        android:layout_height="120dp"
+        android:layout_centerHorizontal="true"
+        android:layout_centerVertical="true" />
+    <Button
+        android:id="@+id/continue_button"
+        style="@style/style_hangman_continue_button"
+        android:layout_width="200dp"
+        android:layout_height="70dp"
+        android:layout_below="@+id/new_button"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="15dp" />
+</RelativeLayout>
