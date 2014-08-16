@@ -5,6 +5,8 @@ VisualStudioVersion = 12.0.30501.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Fundora.Hangman", "Fundora.Hangman\Fundora.Hangman.csproj", "{40A32ED5-33A4-4BAD-88A1-D7196D128A3C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CircleImageCropper", "CircleImageCropper\CircleImageCropper.csproj", "{9E7486F8-A7B1-4534-8A5F-34B965A48F39}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,6 +19,10 @@ Global
 		{40A32ED5-33A4-4BAD-88A1-D7196D128A3C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{40A32ED5-33A4-4BAD-88A1-D7196D128A3C}.Release|Any CPU.Build.0 = Release|Any CPU
 		{40A32ED5-33A4-4BAD-88A1-D7196D128A3C}.Release|Any CPU.Deploy.0 = Release|Any CPU
+		{9E7486F8-A7B1-4534-8A5F-34B965A48F39}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9E7486F8-A7B1-4534-8A5F-34B965A48F39}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9E7486F8-A7B1-4534-8A5F-34B965A48F39}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9E7486F8-A7B1-4534-8A5F-34B965A48F39}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
