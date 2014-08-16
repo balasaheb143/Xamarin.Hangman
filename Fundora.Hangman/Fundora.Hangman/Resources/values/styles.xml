@@ -16,6 +16,15 @@
     <style name="AppTheme" parent="android:Theme.Holo" />
     <!-- All customizations that are NOT specific to a particular API-level can go here. -->
 
+<style name="style_hangman_newgame_button">
+    <item name="android:textColor">@drawable/hangman_newgame_button_text_color</item>
+    <item name="android:background">@drawable/hangman_newgame_button</item>
+</style>
+
+<style name="style_hangman_continue_button">
+    <item name="android:textColor">@drawable/hangman_newgame_button_text_color</item>
+    <item name="android:background">@drawable/hangman_continue_button</item>
+</style>
 
     <!-- Robo Theme. -->
     <style name="RoboTheme" parent="@android:style/TextAppearance.DeviceDefault.Medium">
