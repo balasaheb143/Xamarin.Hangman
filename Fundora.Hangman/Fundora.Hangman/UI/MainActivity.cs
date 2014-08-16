@@ -10,7 +10,7 @@ using com.edmodo.cropper;
 
 namespace Fundora.Hangman
 {
-    [Activity(Label = "Fundora Hangman", MainLauncher = true, Icon = "@drawable/icon")]
+    [Activity(Label = "Fundora Hangman", MainLauncher = false, Icon = "@drawable/icon")]
     public class MainActivity : Activity
     {
         // Static final constants
