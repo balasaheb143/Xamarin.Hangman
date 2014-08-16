@@ -17,7 +17,6 @@ namespace Fundora.Hangman.UI
     {
         protected override void OnCreate(Bundle bundle)
         {
-  
             try
             {
                 RequestWindowFeature(WindowFeatures.NoTitle);

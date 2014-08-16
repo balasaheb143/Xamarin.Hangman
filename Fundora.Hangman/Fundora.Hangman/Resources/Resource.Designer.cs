@@ -157,25 +157,55 @@ namespace Fundora.Hangman
 		{
 			
 			// aapt resource value: 0x7f020000
-			public const int bkg = 2130837504;
+			public const int background_main_menu = 2130837504;
 			
 			// aapt resource value: 0x7f020001
-			public const int butterfly = 2130837505;
+			public const int background_splash_screen = 2130837505;
 			
 			// aapt resource value: 0x7f020002
-			public const int ic_launcher = 2130837506;
+			public const int bkg = 2130837506;
 			
 			// aapt resource value: 0x7f020003
-			public const int Icon = 2130837507;
+			public const int butterfly = 2130837507;
 			
 			// aapt resource value: 0x7f020004
-			public const int monoandroidsplash = 2130837508;
+			public const int continue_button = 2130837508;
 			
 			// aapt resource value: 0x7f020005
-			public const int sidewayssky = 2130837509;
+			public const int continue_button_pressed = 2130837509;
 			
 			// aapt resource value: 0x7f020006
-			public const int violetsky = 2130837510;
+			public const int hangman_continue_button = 2130837510;
+			
+			// aapt resource value: 0x7f020007
+			public const int hangman_continue_button_text_color = 2130837511;
+			
+			// aapt resource value: 0x7f020008
+			public const int hangman_newgame_button = 2130837512;
+			
+			// aapt resource value: 0x7f020009
+			public const int hangman_newgame_button_text_color = 2130837513;
+			
+			// aapt resource value: 0x7f02000a
+			public const int ic_launcher = 2130837514;
+			
+			// aapt resource value: 0x7f02000b
+			public const int Icon = 2130837515;
+			
+			// aapt resource value: 0x7f02000c
+			public const int monoandroidsplash = 2130837516;
+			
+			// aapt resource value: 0x7f02000d
+			public const int new_game_button = 2130837517;
+			
+			// aapt resource value: 0x7f02000e
+			public const int new_game_button_pressed = 2130837518;
+			
+			// aapt resource value: 0x7f02000f
+			public const int sidewayssky = 2130837519;
+			
+			// aapt resource value: 0x7f020010
+			public const int violetsky = 2130837520;
 			
 			static Drawable()
 			{
@@ -255,7 +285,10 @@ namespace Fundora.Hangman
 			public const int activity_main = 2130903040;
 			
 			// aapt resource value: 0x7f030001
-			public const int crop_image_view = 2130903041;
+			public const int activity_main_menu = 2130903041;
+			
+			// aapt resource value: 0x7f030002
+			public const int crop_image_view = 2130903042;
 			
 			static Layout()
 			{
@@ -341,11 +374,17 @@ namespace Fundora.Hangman
 			// aapt resource value: 0x7f090001
 			public const int AppTheme = 2131296257;
 			
-			// aapt resource value: 0x7f090003
-			public const int Mono_Android_Theme_Splash = 2131296259;
+			// aapt resource value: 0x7f090005
+			public const int Mono_Android_Theme_Splash = 2131296261;
 			
 			// aapt resource value: 0x7f090002
 			public const int RoboTheme = 2131296258;
+			
+			// aapt resource value: 0x7f090004
+			public const int style_hangman_continue_button = 2131296260;
+			
+			// aapt resource value: 0x7f090003
+			public const int style_hangman_newgame_button = 2131296259;
 			
 			static Style()
 			{

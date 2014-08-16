@@ -79,6 +79,12 @@
     <AndroidResource Include="Resources\drawable-xhdpi\ic_launcher.png" />
     <AndroidResource Include="Resources\drawable-xhdpi\sidewayssky.png.jpg" />
     <AndroidResource Include="Resources\drawable-xhdpi\violetsky.png" />
+    <AndroidResource Include="Resources\drawable-nodpi\background_main_menu.png" />
+    <AndroidResource Include="Resources\drawable-nodpi\background_splash_screen.png" />
+    <AndroidResource Include="Resources\drawable-nodpi\continue_button.png" />
+    <AndroidResource Include="Resources\drawable-nodpi\continue_button_pressed.png" />
+    <AndroidResource Include="Resources\drawable-nodpi\new_game_button.png" />
+    <AndroidResource Include="Resources\drawable-nodpi\new_game_button_pressed.png" />
     <Content Include="Resources\drawable-xhdpi\.picasaoriginals\butterfly.jpg" />
     <Content Include="Resources\drawable-xhdpi\.picasaoriginals\sidewayssky.png" />
     <AndroidResource Include="Resources\drawable-xxhdpi\ic_launcher.png" />
@@ -92,6 +98,10 @@
     <AndroidResource Include="Resources\values-v11\styles.xml" />
     <AndroidResource Include="Resources\values-v14\styles.xml" />
     <AndroidResource Include="Resources\values-xlarge\dimens.xml" />
+    <AndroidResource Include="Resources\drawable\hangman_continue_button.xml" />
+    <AndroidResource Include="Resources\drawable\hangman_continue_button_text_color.xml" />
+    <AndroidResource Include="Resources\drawable\hangman_newgame_button.xml" />
+    <AndroidResource Include="Resources\drawable\hangman_newgame_button_text_color.xml" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\CircleImageCropper\CircleImageCropper.csproj">
