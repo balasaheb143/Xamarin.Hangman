@@ -12,6 +12,8 @@ import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.Chronometer;
 
@@ -24,20 +26,19 @@ public class MainMenuActivity extends BaseGameActivity implements View.OnClickLi
 	Button btnNewGame;
 	Button btnHighScore;
 
-	Button btnAbout;
-	Button btnExit;
+	// Button btnAbout;
+	// Button btnExit;
 
-//	MediaPlayer mpHangman;
+	// MediaPlayer mpHangman;
 	MediaPlayer mpButtonClick;
 	Chronometer mChronometer;
 	boolean HardwareKeyboard = true, TouchScreenKeyboard = true;
 
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
+		requestWindowFeature(Window.FEATURE_NO_TITLE);
+		getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN, WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		super.onCreate(savedInstanceState);
-		// requestWindowFeature(Window.FEATURE_NO_TITLE);
-		// getWindow().setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-		// WindowManager.LayoutParams.FLAG_FULLSCREEN);
 		setContentView(R.layout.activity_mainmenu);
 
 		initializeUI();
@@ -60,24 +61,24 @@ public class MainMenuActivity extends BaseGameActivity implements View.OnClickLi
 				findViewById(R.id.sign_out_button).setVisibility(View.GONE);
 			}
 
-//			mpHangman = MediaPlayer.create(MainMenuActivity.this, R.raw.logo);
-//			mpHangman.start();
-//			mpHangman.setLooping(true);
-//			
+			// mpHangman = MediaPlayer.create(MainMenuActivity.this,
+			// R.raw.logo);
+			// mpHangman.start();
+			// mpHangman.setLooping(true);
+			//
 			mpButtonClick = MediaPlayer.create(this, R.raw.button_click);
 
 			btnContinue = (Button) findViewById(R.id.continue_button);
 			btnNewGame = (Button) findViewById(R.id.new_button);
-			btnAbout = (Button) findViewById(R.id.about_button);
-			btnExit = (Button) findViewById(R.id.exit_button);
+			// btnAbout = (Button) findViewById(R.id.about_button);
+			// btnExit = (Button) findViewById(R.id.exit_button);
 
-			Typeface tf = Typeface.createFromAsset(getAssets(),
-					"fonts/GosmickSansBold.ttf");
+			Typeface tf = Typeface.createFromAsset(getAssets(), "fonts/GosmickSansBold.ttf");
 
 			btnContinue.setTypeface(tf);
 			btnNewGame.setTypeface(tf);
-			btnAbout.setTypeface(tf);
-			btnExit.setTypeface(tf);
+			// btnAbout.setTypeface(tf);
+			// btnExit.setTypeface(tf);
 
 			btnContinue.setOnClickListener(new View.OnClickListener() {
 				public void onClick(View v) {
@@ -90,30 +91,28 @@ public class MainMenuActivity extends BaseGameActivity implements View.OnClickLi
 			btnNewGame.setOnClickListener(new View.OnClickListener() {
 				public void onClick(View v) {
 					mpButtonClick.start();
-					Intent gamemodesIntent = new Intent(
-							MainMenuActivity.this,
-							com.fundora.hangman.activities.GameModesActivity.class);
+					Intent gamemodesIntent = new Intent(MainMenuActivity.this, com.fundora.hangman.activities.GameModesActivity.class);
 					MainMenuActivity.this.startActivity(gamemodesIntent);
 
 				}
 			});
 
-			btnAbout.setOnClickListener(new View.OnClickListener() {
-				public void onClick(View v) {
-					mpButtonClick.start();
-					Intent aboutIntent = new Intent(MainMenuActivity.this,
-							AboutActivity.class);
-					MainMenuActivity.this.startActivity(aboutIntent);
-				}
-			});
+			// btnAbout.setOnClickListener(new View.OnClickListener() {
+			// public void onClick(View v) {
+			// mpButtonClick.start();
+			// Intent aboutIntent = new Intent(MainMenuActivity.this,
+			// AboutActivity.class);
+			// MainMenuActivity.this.startActivity(aboutIntent);
+			// }
+			// });
 
-			btnExit.setOnClickListener(new View.OnClickListener() {
-
-				public void onClick(View v) {
-					mpButtonClick.start();
-					android.os.Process.killProcess(android.os.Process.myPid());
-				}
-			});
+			// btnExit.setOnClickListener(new View.OnClickListener() {
+			//
+			// public void onClick(View v) {
+			// mpButtonClick.start();
+			// android.os.Process.killProcess(android.os.Process.myPid());
+			// }
+			// });
 		} catch (Exception ex) {
 			ex.printStackTrace();
 		}
@@ -130,8 +129,7 @@ public class MainMenuActivity extends BaseGameActivity implements View.OnClickLi
 		int itemId = item.getItemId();
 		if (itemId == R.id.menu_settings) {
 			mpButtonClick.start();
-			Intent aboutIntent = new Intent(MainMenuActivity.this,
-					com.fundora.hangman.activities.SettingsActivity.class);
+			Intent aboutIntent = new Intent(MainMenuActivity.this, com.fundora.hangman.activities.SettingsActivity.class);
 			MainMenuActivity.this.startActivity(aboutIntent);
 			return true;
 		} else if (itemId == R.id.Exit) {
@@ -171,8 +169,7 @@ public class MainMenuActivity extends BaseGameActivity implements View.OnClickLi
 	}
 
 	private void startGame(int i, int gamemode) {
-		Intent intent = new Intent(MainMenuActivity.this,
-				com.fundora.hangman.activities.GameActivity.class);
+		Intent intent = new Intent(MainMenuActivity.this, com.fundora.hangman.activities.GameActivity.class);
 		intent.putExtra(GameActivity.KEY_DIFFICULTY, i);
 		intent.putExtra(GameActivity.GAME_MODE, gamemode);
 		startActivity(intent);

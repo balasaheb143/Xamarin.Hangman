@@ -1,0 +1,16 @@
+<?xml version ="1.0" encoding="UTF-8"?>
+<!DOCTYPE xml>
+<resources xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <style name="style_hangman_newgame_button">
+        <item name="android:textColor">@drawable/hangman_newgame_button_text_color</item>
+        <item name="android:background">@drawable/hangman_newgame_button</item>
+    </style>
+
+    <style name="style_hangman_continue_button">
+        <item name="android:textColor">@drawable/hangman_newgame_button_text_color</item>
+        <item name="android:background">@drawable/hangman_continue_button</item>
+    </style>
+
+
+</resources>
