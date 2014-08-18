@@ -19,7 +19,7 @@ namespace Fundora.Hangman.Application
     [Application(Debuggable = true)]
     public class MyApplication : Android.App.Application
     {
-        private static String RomanianDbName = "Fundora.Hangman.Romanian";
+        private static String RomanianDbName = "Fundora.Hangman.Romanian.db3";
         private static String DbPath;
         public static SQLiteAsyncConnection sqLConnection { get; private set; }
         public static List<Word> Words { get; set; }
