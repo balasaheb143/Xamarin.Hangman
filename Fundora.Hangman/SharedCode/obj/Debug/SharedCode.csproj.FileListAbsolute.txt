@@ -1,0 +1,5 @@
+C:\Projects\Xamarin.Hangman\Fundora.Hangman\SharedCode\bin\Debug\SharedCode.dll
+C:\Projects\Xamarin.Hangman\Fundora.Hangman\SharedCode\bin\Debug\SharedCode.pdb
+C:\Projects\Xamarin.Hangman\Fundora.Hangman\SharedCode\obj\Debug\SharedCode.csprojResolveAssemblyReference.cache
+C:\Projects\Xamarin.Hangman\Fundora.Hangman\SharedCode\obj\Debug\SharedCode.dll
+C:\Projects\Xamarin.Hangman\Fundora.Hangman\SharedCode\obj\Debug\SharedCode.pdb
