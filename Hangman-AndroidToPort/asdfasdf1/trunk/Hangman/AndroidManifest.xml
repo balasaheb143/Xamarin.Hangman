@@ -49,10 +49,6 @@
             android:label="About Hangman" >
         </activity>
         <activity
-            android:name="com.fundora.hangman.activities.SwarmStats"
-            android:label="Swarm" >
-        </activity>
-        <activity
             android:name="com.fundora.hangman.activities.ScoreActivity"
             android:label="Score" >
         </activity>

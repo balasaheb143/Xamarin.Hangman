@@ -118,7 +118,6 @@
         android:textStyle="bold" />
 
     <TextView
-        android:id="@+id/entered_txt"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:layout_alignBaseline="@+id/TextView2"

@@ -52,9 +52,6 @@
     <AndroidLinkMode>SdkOnly</AndroidLinkMode>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="GooglePlayServicesLib">
-      <HintPath>..\Components\googleplayservicesjellybean-19.0.0\lib\android\GooglePlayServicesLib.dll</HintPath>
-    </Reference>
     <Reference Include="Mono.Android" />
     <Reference Include="mscorlib" />
     <Reference Include="SQLite">
@@ -64,15 +61,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Xml" />
-    <Reference Include="Xamarin.Android.Support.v4">
-      <HintPath>..\Components\googleplayservicesjellybean-19.0.0\lib\android\Xamarin.Android.Support.v4.dll</HintPath>
-    </Reference>
-    <Reference Include="Xamarin.Android.Support.v7.AppCompat">
-      <HintPath>..\Components\googleplayservicesjellybean-19.0.0\lib\android\Xamarin.Android.Support.v7.AppCompat.dll</HintPath>
-    </Reference>
-    <Reference Include="Xamarin.Android.Support.v7.MediaRouter">
-      <HintPath>..\Components\googleplayservicesjellybean-19.0.0\lib\android\Xamarin.Android.Support.v7.MediaRouter.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Application\MyApplication.cs" />
@@ -145,10 +133,6 @@
     <Folder Include="Resources\drawable-mdpi\" />
   </ItemGroup>
   <ItemGroup>
-    <XamarinComponentReference Include="googleplayservicesjellybean">
-      <Visible>False</Visible>
-      <Version>19.0.0</Version>
-    </XamarinComponentReference>
     <XamarinComponentReference Include="sqlite-net">
       <Visible>False</Visible>
       <Version>1.0.8</Version>
