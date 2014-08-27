@@ -1,0 +1,6 @@
+C:\Projects\Xamarin.Hangman\Fundora.Hangman\TypeANumber\bin\Debug\TypeANumber.dll
+C:\Projects\Xamarin.Hangman\Fundora.Hangman\BaseGameUtils\bin\Debug\BaseGameUtils.dll
+C:\Projects\Xamarin.Hangman\Fundora.Hangman\Components\googleplayservices-19.0.0\lib\android\GooglePlayServicesLib.dll
+C:\Projects\Xamarin.Hangman\Fundora.Hangman\Components\googleplayservices-19.0.0\lib\android\Xamarin.Android.Support.v4.dll
+C:\Projects\Xamarin.Hangman\Fundora.Hangman\Components\googleplayservices-19.0.0\lib\android\Xamarin.Android.Support.v7.AppCompat.dll
+C:\Projects\Xamarin.Hangman\Fundora.Hangman\Components\googleplayservices-19.0.0\lib\android\Xamarin.Android.Support.v7.MediaRouter.dll

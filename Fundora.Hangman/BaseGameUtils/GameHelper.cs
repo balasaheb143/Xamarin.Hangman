@@ -1,7 +1,5 @@
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
 using Android.App;
 using Android.Content;
 using Android.Gms.AppStates;
@@ -16,60 +14,28 @@ using Android.Gms.Plus;
 using Android.OS;
 using Android.Runtime;
 using Android.Util;
-using Android.Views;
-using Android.Widget;
 using Java.Lang;
+using Exception = System.Exception;
 using String = System.String;
 
 namespace BaseGameUtils
 {
     public class GameHelper : IGoogleApiClientConnectionCallbacks, IGoogleApiClientOnConnectionFailedListener
     {
-
         public static String TAG = "GameHelper";
 
         // configuration done?
-        private bool mSetupDone = false;
-
-        // are we currently connecting?
-        private bool mConnecting = false;
-
-        // Are we expecting the result of a resolution flow?
-        bool mExpectingResolution = false;
-
-        // was the sign-in flow cancelled when we tried it?
-        // if true, we know not to try again automatically.
-        bool mSignInCancelled = false;
-
-        /**
-         * The Activity we are bound to. We need to keep a reference to the Activity
-         * because some games methods require an Activity (a Context won't do). We
-         * are careful not to leak these references: we release them on onStop().
-         */
-        Activity mActivity = null;
-
-        // app context
-        Context mAppContext = null;
 
         // Request code we use when invoking other Activities to complete the
         // sign-in flow.
-        static int RC_RESOLVE = 9001;
+        private static int RC_RESOLVE = 9001;
+
+        public IntPtr Handle { get; private set; }
 
         // Request code when invoking Activities whose result we don't care about.
-        static int RC_UNUSED = 9002;
+        private static int RC_UNUSED = 9002;
 
         // the Google API client builder we will use to create GoogleApiClient
-        GoogleApiClientBuilder mGoogleApiClientBuilder = null;
-
-        // Api options to use when adding each API, null for none
-        //TODO: FIX GamesClass.GamesOptions.Builder.Build();
-        private GamesClass.GamesOptions mGamesApiOptions = null;
-
-        PlusClass.PlusOptions mPlusApiOptions = null;
-        Api.ApiOptionsNoOptions mAppStateApiOptions = null;
-
-        // Google API client object we manage.
-        IGoogleApiClient mGoogleApiClient = null;
 
         // Client request flags
         public static int CLIENT_NONE = 0x00;
@@ -77,16 +43,27 @@ namespace BaseGameUtils
         public static int CLIENT_PLUS = 0x02;
         public static int CLIENT_APPSTATE = 0x04;
         public static int CLIENT_SNAPSHOT = 0x08;
+
         public static int CLIENT_ALL = CLIENT_GAMES | CLIENT_PLUS
-                | CLIENT_APPSTATE | CLIENT_SNAPSHOT;
+                                       | CLIENT_APPSTATE | CLIENT_SNAPSHOT;
+
+        private static int DEFAULT_MAX_SIGN_IN_ATTEMPTS = 3;
 
         // What clients were requested? (bit flags)
-        int mRequestedClients = CLIENT_NONE;
+        private readonly int mRequestedClients = CLIENT_NONE;
+        private String GAMEHELPER_SHARED_PREFS = "GAMEHELPER_SHARED_PREFS";
+        private String KEY_SIGN_IN_CANCELLATIONS = "KEY_SIGN_IN_CANCELLATIONS";
+        private Activity mActivity;
+
+        // app context
+        private Context mAppContext;
+        private Api.ApiOptionsNoOptions mAppStateApiOptions;
 
         // Whether to automatically try to sign in on onStart(). We only set this
         // to true when the sign-in process fails or the user explicitly signs out.
         // We set it back to false when the user initiates the sign in process.
-        bool mConnectOnStart = true;
+        private bool mConnectOnStart = true;
+        private bool mConnecting;
 
         /*
          * Whether user has specifically requested that the sign-in process begin.
@@ -94,48 +71,47 @@ namespace BaseGameUtils
          * that we try once the Activity is started -- if true, then the user has
          * already clicked a "Sign-In" button or something similar
          */
-        bool mUserInitiatedSignIn = false;
 
         // The connection result we got from our last attempt to sign-in.
-        ConnectionResult mConnectionResult = null;
+        private ConnectionResult mConnectionResult;
 
         // The error that happened during sign-in.
-        SignInFailureReason mSignInFailureReason = null;
-
-        // Should we show error dialog boxes?
-        bool mShowErrorDialogs = true;
 
         // Print debug logs?
-        bool mDebugLog = false;
+        private bool mDebugLog;
+        private bool mExpectingResolution;
+        private GamesClass.GamesOptions mGamesApiOptions;
+        private IGoogleApiClient mGoogleApiClient;
+        private GoogleApiClientBuilder mGoogleApiClientBuilder;
 
-        Handler mHandler;
+        private Handler mHandler;
 
         /*
          * If we got an invitation when we connected to the games client, it's here.
          * Otherwise, it's null.
          */
-        Invitation mInvitation;
+        private IInvitation mInvitation;
 
         /*
          * If we got turn-based match when we connected to the games client, it's
          * here. Otherwise, it's null.
          */
-        TurnBasedMatch mTurnBasedMatch;
-
-        /*
-         * If we have incoming requests when we connected to the games client, they
-         * are here. Otherwise, it's null.
-         */
-        IList<IGameRequest> mRequests;
 
         // Listener
-        IGameHelperListener mListener = null;
+        private IGameHelperListener mListener;
 
         // Should we start the flow to sign the user in automatically on startup? If
         // so, up to
         // how many times in the life of the application?
-        static int DEFAULT_MAX_SIGN_IN_ATTEMPTS = 3;
-        int mMaxAutoSignInAttempts = DEFAULT_MAX_SIGN_IN_ATTEMPTS;
+        private int mMaxAutoSignInAttempts = DEFAULT_MAX_SIGN_IN_ATTEMPTS;
+        private PlusClass.PlusOptions mPlusApiOptions;
+        private IList<IGameRequest> mRequests;
+        private bool mSetupDone;
+        private bool mShowErrorDialogs = true;
+        private bool mSignInCancelled;
+        private SignInFailureReason mSignInFailureReason;
+        private ITurnBasedMatch mTurnBasedMatch;
+        private bool mUserInitiatedSignIn;
 
         /**
          * Construct a GameHelper object, initially tied to the given Activity.
@@ -155,6 +131,116 @@ namespace BaseGameUtils
             mHandler = new Handler();
         }
 
+        public void OnConnected(Bundle connectionHint)
+        {
+            debugLog("onConnected: connected!");
+
+            if (connectionHint != null)
+            {
+                debugLog("onConnected: connection hint provided. Checking for invite.");
+                var inv = connectionHint.GetParcelable(Multiplayer.ExtraInvitation).JavaCast<IInvitation>();
+                if (inv != null && inv.InvitationId != null)
+                {
+                    // retrieve and cache the invitation ID
+                    debugLog("onConnected: connection hint has a room invite!");
+                    mInvitation = inv;
+                    debugLog("Invitation ID: " + mInvitation.InvitationId);
+                }
+
+                // Do we have any requests pending?
+                mRequests = GamesClass.Requests.GetGameRequestsFromBundle(connectionHint);
+                if (mRequests.Count != 0)
+                {
+                    // We have requests in onConnected's connectionHint.
+                    debugLog("onConnected: connection hint has " + mRequests.Count + " request(s)");
+                }
+
+                debugLog("onConnected: connection hint provided. Checking for TBMP game.");
+                mTurnBasedMatch =
+                    connectionHint.GetParcelable(Multiplayer.ExtraTurnBasedMatch).JavaCast<ITurnBasedMatch>();
+            }
+
+            // we're good to go
+            succeedSignIn();
+        }
+
+        public void OnConnectionSuspended(int cause)
+        {
+            debugLog("onConnectionSuspended, cause=" + cause);
+            disconnect();
+            mSignInFailureReason = null;
+            debugLog("Making extraordinary call to OnSignInFailed callback");
+            mConnecting = false;
+            notifyListener(false);
+        }
+
+        public void Dispose()
+        {
+            //TODO: FIX
+            //throw new System.NotImplementedException();
+        }
+
+        public void OnConnectionFailed(ConnectionResult result)
+        {
+            // save connection result for later reference
+            debugLog("onConnectionFailed");
+
+            mConnectionResult = result;
+            debugLog("Connection failure:");
+            debugLog("   - code: " + GameHelperUtils.errorCodeToString(mConnectionResult.ErrorCode));
+            debugLog("   - resolvable: " + mConnectionResult.HasResolution);
+            debugLog("   - details: " + mConnectionResult);
+
+            int cancellations = getSignInCancellations();
+            bool shouldResolve = false;
+
+            if (mUserInitiatedSignIn)
+            {
+                debugLog("onConnectionFailed: WILL resolve because user initiated sign-in.");
+                shouldResolve = true;
+            }
+            else if (mSignInCancelled)
+            {
+                debugLog("onConnectionFailed WILL NOT resolve (user already cancelled once).");
+                shouldResolve = false;
+            }
+            else if (cancellations < mMaxAutoSignInAttempts)
+            {
+                debugLog("onConnectionFailed: WILL resolve because we have below the max# of "
+                         + "attempts, "
+                         + cancellations
+                         + " < "
+                         + mMaxAutoSignInAttempts);
+                shouldResolve = true;
+            }
+            else
+            {
+                shouldResolve = false;
+                debugLog("onConnectionFailed: Will NOT resolve; not user-initiated and max attempts "
+                         + "reached: "
+                         + cancellations
+                         + " >= "
+                         + mMaxAutoSignInAttempts);
+            }
+
+            if (!shouldResolve)
+            {
+                // Fail and wait for the user to want to sign in.
+                debugLog("onConnectionFailed: since we won't resolve, failing now.");
+                mConnectionResult = result;
+                mConnecting = false;
+                notifyListener(false);
+                return;
+            }
+
+            debugLog("onConnectionFailed: resolving problem...");
+
+            // Resolve the connection result. This usually means showing a dialog or
+            // starting an Activity that will allow the user to give the appropriate
+            // consents so that sign-in can be successful.
+            resolveConnectionResult();
+        }
+
         /**
          * Sets the maximum number of automatic sign-in attempts to be made on
          * application startup. This maximum is over the lifetime of the application
@@ -165,18 +251,19 @@ namespace BaseGameUtils
          * you do not want the user to be prompted to sign in on application
          * startup.
          */
+
         public void setMaxAutoSignInAttempts(int max)
         {
             mMaxAutoSignInAttempts = max;
         }
 
-        void assertConfigured(String operation)
+        private void assertConfigured(String operation)
         {
             if (!mSetupDone)
             {
                 String error = "GameHelper error: Operation attempted without setup: "
-                        + operation
-                        + ". The setup() method must be called before attempting any other operation.";
+                               + operation
+                               + ". The setup() method must be called before attempting any other operation.";
                 logError(error);
                 throw new IllegalStateException(error);
             }
@@ -187,8 +274,8 @@ namespace BaseGameUtils
             if (mGoogleApiClientBuilder != null)
             {
                 String error = "GameHelper: you cannot call set*ApiOptions after the client "
-                        + "builder has been created. Call it before calling createApiClientBuilder() "
-                        + "or setup().";
+                               + "builder has been created. Call it before calling createApiClientBuilder() "
+                               + "or setup().";
                 logError(error);
                 throw new IllegalStateException(error);
             }
@@ -198,6 +285,7 @@ namespace BaseGameUtils
          * Sets the options to pass when setting up the Games API. Call before
          * setup().
          */
+
         public void setGamesApiOptions(GamesClass.GamesOptions options)
         {
             doApiOptionsPreCheck();
@@ -208,6 +296,7 @@ namespace BaseGameUtils
          * Sets the options to pass when setting up the AppState API. Call before
          * setup().
          */
+
         public void setAppStateApiOptions(Api.ApiOptionsNoOptions options)
         {
             doApiOptionsPreCheck();
@@ -218,9 +307,9 @@ namespace BaseGameUtils
          * Sets the options to pass when setting up the Plus API. Call before
          * setup().
          */
+
         public void setPlusApiOptions(PlusClass.PlusOptions options)
         {
-
             doApiOptionsPreCheck();
             mPlusApiOptions = options;
         }
@@ -231,44 +320,53 @@ namespace BaseGameUtils
          * nonstandard setup (e.g. adding extra scopes for other APIs) on the
          * GoogleApiClient.Builder before calling @link{#setup}.
          */
+
         public GoogleApiClientBuilder createApiClientBuilder()
         {
-            if (mSetupDone)
+            try
             {
-                String error = "GameHelper: you called GameHelper.createApiClientBuilder() after "
-                        + "calling setup. You can only get a client builder BEFORE performing setup.";
-                logError(error);
-                throw new IllegalStateException(error);
+                if (mSetupDone)
+                {
+                    String error = "GameHelper: you called GameHelper.createApiClientBuilder() after " + "calling setup. You can only get a client builder BEFORE performing setup.";
+                    logError(error);
+                    throw new IllegalStateException(error);
+                }
+
+                var builder = new GoogleApiClientBuilder(mActivity, this, this);
+
+                if (0 != (mRequestedClients & CLIENT_GAMES))
+                {
+                    builder.AddApi(GamesClass.Api, mGamesApiOptions);
+                    builder.AddScope(GamesClass.ScopeGames);
+                }
+
+                if (0 != (mRequestedClients & CLIENT_PLUS))
+                {
+                    builder.AddApi(PlusClass.Api);
+                    builder.AddScope(PlusClass.ScopePlusLogin);
+                }
+
+                if (0 != (mRequestedClients & CLIENT_APPSTATE))
+                {
+                    builder.AddApi(AppStateManager.Api);
+                    builder.AddScope(AppStateManager.ScopeAppState);
+                }
+
+                if (0 != (mRequestedClients & CLIENT_SNAPSHOT))
+                {
+                    builder.AddScope(DriveClass.ScopeAppfolder);
+                    builder.AddApi(DriveClass.Api);
+                }
+
+                mGoogleApiClientBuilder = builder;
+                return builder;
+
             }
-
-            GoogleApiClientBuilder builder = new GoogleApiClientBuilder(mActivity, this, this);
-
-            if (0 != (mRequestedClients & CLIENT_GAMES))
+            catch (Exception ex)
             {
-                builder.AddApi(GamesClass.Api, mGamesApiOptions);
-                builder.AddScope(GamesClass.ScopeGames);
+                ex.ToString();
             }
-
-            if (0 != (mRequestedClients & CLIENT_PLUS))
-            {
-                builder.AddApi(PlusClass.Api);
-                builder.AddScope(PlusClass.ScopePlusLogin);
-            }
-
-            if (0 != (mRequestedClients & CLIENT_APPSTATE))
-            {
-                builder.AddApi(AppStateManager.Api);
-                builder.AddScope(AppStateManager.ScopeAppState);
-            }
-
-            if (0 != (mRequestedClients & CLIENT_SNAPSHOT))
-            {
-                builder.AddScope(DriveClass.ScopeAppfolder);
-                builder.AddApi(DriveClass.Api);
-            }
-
-            mGoogleApiClientBuilder = builder;
-            return builder;
+            return null;
         }
 
         /**
@@ -280,49 +378,63 @@ namespace BaseGameUtils
          * @param listener
          *            The listener to be notified of sign-in events.
          */
+
         public void setup(IGameHelperListener listener)
         {
-            if (mSetupDone)
+            try
             {
-                String error = "GameHelper: you cannot call GameHelper.setup() more than once!";
-                logError(error);
-                throw new IllegalStateException(error);
-            }
-            mListener = listener;
-            debugLog("Setup: requested clients: " + mRequestedClients);
+                if (listener == null)
+                {
+                    throw new Exception("The listener is not of type IGameHelperListener");
+                }
+                if (mSetupDone)
+                {
+                    String error = "GameHelper: you cannot call GameHelper.setup() more than once!";
+                    logError(error);
+                    throw new IllegalStateException(error);
+                }
+                mListener = listener;
+                debugLog("Setup: requested clients: " + mRequestedClients);
 
-            if (mGoogleApiClientBuilder == null)
+                if (mGoogleApiClientBuilder == null)
+                {
+                    // we don't have a builder yet, so create one
+                    mGoogleApiClientBuilder = createApiClientBuilder();
+                }
+
+                mGoogleApiClient = mGoogleApiClientBuilder.Build();
+                mGoogleApiClientBuilder = null;
+                mSetupDone = true;
+            }
+            catch (Exception ex)
             {
-                // we don't have a builder yet, so create one
-                createApiClientBuilder();
+                ex.ToString();
             }
-
-            mGoogleApiClient = mGoogleApiClientBuilder.Build();
-            mGoogleApiClientBuilder = null;
-            mSetupDone = true;
         }
 
         /**
          * Returns the GoogleApiClient object. In order to call this method, you
          * must have called @link{setup}.
          */
+
         public IGoogleApiClient getApiClient()
         {
             if (mGoogleApiClient == null)
             {
-                throw new IllegalStateException(
-                        "No GoogleApiClient. Did you call setup()?");
+                throw new IllegalStateException("No GoogleApiClient. Did you call setup()?");
             }
             return mGoogleApiClient;
         }
 
         /** Returns whether or not the user is signed in. */
+
         public bool isSignedIn()
         {
             return mGoogleApiClient != null && mGoogleApiClient.IsConnected;
         }
 
         /** Returns whether or not we are currently connecting */
+
         public bool isConnecting()
         {
             return mConnecting;
@@ -332,6 +444,7 @@ namespace BaseGameUtils
          * Returns whether or not there was a (non-recoverable) error during the
          * sign-in process.
          */
+
         public bool hasSignInError()
         {
             return mSignInFailureReason != null;
@@ -341,6 +454,7 @@ namespace BaseGameUtils
          * Returns the error that happened during the sign-in process, null if no
          * error occurred.
          */
+
         public SignInFailureReason getSignInError()
         {
             return mSignInFailureReason;
@@ -353,6 +467,7 @@ namespace BaseGameUtils
         }
 
         /** Call this method from your Activity's onStart(). */
+
         public void onStart(Activity act)
         {
             mActivity = act;
@@ -366,7 +481,7 @@ namespace BaseGameUtils
                 if (mGoogleApiClient.IsConnected)
                 {
                     Log.Warn(TAG,
-                            "GameHelper: client was already connected on onStart()");
+                        "GameHelper: client was already connected on onStart()");
                 }
                 else
                 {
@@ -379,17 +494,16 @@ namespace BaseGameUtils
             {
                 debugLog("Not attempting to connect becase mConnectOnStart=false");
                 debugLog("Instead, reporting a sign-in failure.");
-                //TODO: FIX
-                //mHandler.PostDelayed(new Runnable() {
-                //    @Override
-                //    public void run() {
-                //        notifyListener(false);
-                //    }
-                //}, 1000);
+                Runnable runnable = new Runnable(() =>
+                {
+                    notifyListener(false);
+                });
+                mHandler.PostDelayed(runnable, 1000);
             }
         }
 
         /** Call this method from your Activity's onStop(). */
+
         public void onStop()
         {
             debugLog("onStop");
@@ -419,15 +533,16 @@ namespace BaseGameUtils
          *                                            case, accept the invitation.
          * @return The id of the invitation, or null if none was received.
          */
+
         public String getInvitationId()
         {
             if (!mGoogleApiClient.IsConnected)
             {
                 Log.Warn(TAG,
-                        "Warning: getInvitationId() should only be called when signed in, "
-                                + "that is, after getting onSignInSuceeded()");
+                    "Warning: getInvitationId() should only be called when signed in, " +
+                    "that is, after getting onSignInSuceeded()");
             }
-            return mInvitation == null ? null : mInvitation.getInvitationId();
+            return mInvitation == null ? null : mInvitation.InvitationId;
         }
 
         /**
@@ -439,11 +554,14 @@ namespace BaseGameUtils
          *                                            case, accept the invitation.
          * @return The invitation, or null if none was received.
          */
-        public Invitation getInvitation()
+
+        public IInvitation getInvitation()
         {
             if (!mGoogleApiClient.IsConnected)
             {
-                Log.Warn(TAG, "Warning: getInvitation() should only be called when signed in, " + "that is, after getting onSignInSuceeded()");
+                Log.Warn(TAG,
+                    "Warning: getInvitation() should only be called when signed in, " +
+                    "that is, after getting onSignInSuceeded()");
             }
             return mInvitation;
         }
@@ -486,13 +604,14 @@ namespace BaseGameUtils
          *                                            match available.
          * @return The match, or null if none was received.
          */
-        public TurnBasedMatch getTurnBasedMatch()
+
+        public ITurnBasedMatch getTurnBasedMatch()
         {
             if (!mGoogleApiClient.IsConnected)
             {
                 Log.Warn(TAG,
-                        "Warning: getTurnBasedMatch() should only be called when signed in, "
-                                + "that is, after getting onSignInSuceeded()");
+                    "Warning: getTurnBasedMatch() should only be called when signed in, "
+                    + "that is, after getting onSignInSuceeded()");
             }
             return mTurnBasedMatch;
         }
@@ -506,18 +625,20 @@ namespace BaseGameUtils
          *                                            handled.
          * @return The requests, or null if none were received.
          */
-        public List<IGameRequest> getRequests()
+
+        public IList<IGameRequest> getRequests()
         {
             if (!mGoogleApiClient.IsConnected)
             {
                 Log.Warn(TAG, "Warning: getRequests() should only be called "
-                        + "when signed in, "
-                        + "that is, after getting onSignInSuceeded()");
+                              + "when signed in, "
+                              + "that is, after getting onSignInSuceeded()");
             }
             return mRequests;
         }
 
         /** Enables debug logging */
+
         public void enableDebugLog(bool enabled)
         {
             mDebugLog = enabled;
@@ -531,11 +652,12 @@ namespace BaseGameUtils
         public void enableDebugLog(bool enabled, String tag)
         {
             Log.Warn(TAG, "GameHelper.enableDebugLog(bool,String) is deprecated. "
-                    + "Use GameHelper.enableDebugLog(bool)");
+                          + "Use GameHelper.enableDebugLog(bool)");
             enableDebugLog(enabled);
         }
 
         /** Sign out and disconnect from the APIs. */
+
         public void signOut()
         {
             if (!mGoogleApiClient.IsConnected)
@@ -573,12 +695,13 @@ namespace BaseGameUtils
          * onActivityResult callback. If the activity result pertains to the sign-in
          * process, processes it appropriately.
          */
+
         public void onActivityResult(int requestCode, int responseCode,
-                                     Intent intent)
+            Intent intent)
         {
             debugLog("onActivityResult: req="
-                    + (requestCode == RC_RESOLVE ? "RC_RESOLVE" : Java.Lang.String.ValueOf(requestCode)) + ", resp="
-                    + GameHelperUtils.activityResponseCodeToString(responseCode));
+                     + (requestCode == RC_RESOLVE ? "RC_RESOLVE" : Java.Lang.String.ValueOf(requestCode)) + ", resp="
+                     + GameHelperUtils.activityResponseCodeToString(responseCode));
             if (requestCode != RC_RESOLVE)
             {
                 debugLog("onActivityResult: request code not meant for us. Ignoring.");
@@ -622,7 +745,7 @@ namespace BaseGameUtils
                 int prevCancellations = getSignInCancellations();
                 int newCancellations = incrementSignInCancellations();
                 debugLog("onAR: # of cancellations " + prevCancellations + " --> "
-                        + newCancellations + ", max " + mMaxAutoSignInAttempts);
+                         + newCancellations + ", max " + mMaxAutoSignInAttempts);
 
                 notifyListener(false);
             }
@@ -631,19 +754,21 @@ namespace BaseGameUtils
                 // Whatever the problem we were trying to solve, it was not
                 // solved. So give up and show an error message.
                 debugLog("onAR: responseCode="
-                        + GameHelperUtils
-                        .activityResponseCodeToString(responseCode)
-                        + ", so giving up.");
+                         + GameHelperUtils
+                             .activityResponseCodeToString(responseCode)
+                         + ", so giving up.");
                 giveUp(new SignInFailureReason(mConnectionResult.ErrorCode, responseCode));
             }
         }
 
-        void notifyListener(bool success)
+        private void notifyListener(bool success)
         {
             debugLog("Notifying LISTENER of sign-in "
-                    + (success ? "SUCCESS"
-                    : mSignInFailureReason != null ? "FAILURE (error)"
-                    : "FAILURE (no error)"));
+                     + (success
+                         ? "SUCCESS"
+                         : mSignInFailureReason != null
+                             ? "FAILURE (error)"
+                             : "FAILURE (no error)"));
             if (mListener != null)
             {
                 if (success)
@@ -663,6 +788,7 @@ namespace BaseGameUtils
          * may show up. At the end of the process, the GameHelperListener's
          * OnSignInSucceeded() or OnSignInFailed() methods will be called.
          */
+
         public void beginUserInitiatedSignIn()
         {
             debugLog("beginUserInitiatedSignIn: resetting attempt count.");
@@ -678,7 +804,7 @@ namespace BaseGameUtils
                 notifyListener(true);
                 return;
             }
-            else if (mConnecting)
+            if (mConnecting)
             {
                 logWarn("beginUserInitiatedSignIn() called when already connecting. "
                         + "Be patient! You can only call this method after you get an "
@@ -714,7 +840,7 @@ namespace BaseGameUtils
             }
         }
 
-        void connect()
+        private void connect()
         {
             if (mGoogleApiClient.IsConnected)
             {
@@ -731,6 +857,7 @@ namespace BaseGameUtils
         /**
          * Disconnects the API client, then connects again.
          */
+
         public void reconnectClient()
         {
             if (!mGoogleApiClient.IsConnected)
@@ -747,39 +874,8 @@ namespace BaseGameUtils
         }
 
         /** Called when we successfully obtain a connection to a client. */
-        public void OnConnected(Bundle connectionHint)
-        {
-            debugLog("onConnected: connected!");
 
-            if (connectionHint != null)
-            {
-                debugLog("onConnected: connection hint provided. Checking for invite.");
-                Invitation inv = connectionHint.GetParcelable(Multiplayer.ExtraInvitation);
-                if (inv != null && inv.getInvitationId() != null)
-                {
-                    // retrieve and cache the invitation ID
-                    debugLog("onConnected: connection hint has a room invite!");
-                    mInvitation = inv;
-                    debugLog("Invitation ID: " + mInvitation.getInvitationId());
-                }
-
-                // Do we have any requests pending?
-                mRequests = GamesClass.Requests.GetGameRequestsFromBundle(connectionHint);
-                if (mRequests.Count != 0)
-                {
-                    // We have requests in onConnected's connectionHint.
-                    debugLog("onConnected: connection hint has " + mRequests.Count + " request(s)");
-                }
-
-                debugLog("onConnected: connection hint provided. Checking for TBMP game.");
-                mTurnBasedMatch = connectionHint.GetParcelable(Multiplayer.ExtraTurnBasedMatch);
-            }
-
-            // we're good to go
-            succeedSignIn();
-        }
-
-        void succeedSignIn()
+        private void succeedSignIn()
         {
             debugLog("succeedSignIn");
             mSignInFailureReason = null;
@@ -789,12 +885,9 @@ namespace BaseGameUtils
             notifyListener(true);
         }
 
-        private String GAMEHELPER_SHARED_PREFS = "GAMEHELPER_SHARED_PREFS";
-        private String KEY_SIGN_IN_CANCELLATIONS = "KEY_SIGN_IN_CANCELLATIONS";
-
         // Return the number of times the user has cancelled the sign-in flow in the
         // life of the app
-        int getSignInCancellations()
+        private int getSignInCancellations()
         {
             ISharedPreferences sp = mAppContext.GetSharedPreferences(GAMEHELPER_SHARED_PREFS, FileCreationMode.Private);
             return sp.GetInt(KEY_SIGN_IN_CANCELLATIONS, 0);
@@ -803,10 +896,11 @@ namespace BaseGameUtils
         // Increments the counter that indicates how many times the user has
         // cancelled the sign in
         // flow in the life of the application
-        int incrementSignInCancellations()
+        private int incrementSignInCancellations()
         {
             int cancellations = getSignInCancellations();
-            ISharedPreferencesEditor editor = mAppContext.GetSharedPreferences(GAMEHELPER_SHARED_PREFS, FileCreationMode.Private).Edit();
+            ISharedPreferencesEditor editor =
+                mAppContext.GetSharedPreferences(GAMEHELPER_SHARED_PREFS, FileCreationMode.Private).Edit();
             editor.PutInt(KEY_SIGN_IN_CANCELLATIONS, cancellations + 1);
             editor.Commit();
             return cancellations + 1;
@@ -814,81 +908,23 @@ namespace BaseGameUtils
 
         // Reset the counter of how many times the user has cancelled the sign-in
         // flow.
-        void resetSignInCancellations()
+        private void resetSignInCancellations()
         {
-            ISharedPreferencesEditor editor = mAppContext.GetSharedPreferences(GAMEHELPER_SHARED_PREFS, FileCreationMode.Private).Edit();
+            ISharedPreferencesEditor editor =
+                mAppContext.GetSharedPreferences(GAMEHELPER_SHARED_PREFS, FileCreationMode.Private).Edit();
             editor.PutInt(KEY_SIGN_IN_CANCELLATIONS, 0);
             editor.Commit();
         }
 
         /** Handles a connection failure. */
-        public void OnConnectionFailed(ConnectionResult result)
-        {
-            // save connection result for later reference
-            debugLog("onConnectionFailed");
-
-            mConnectionResult = result;
-            debugLog("Connection failure:");
-            debugLog("   - code: " + GameHelperUtils.errorCodeToString(mConnectionResult.ErrorCode));
-            debugLog("   - resolvable: " + mConnectionResult.HasResolution);
-            debugLog("   - details: " + mConnectionResult);
-
-            int cancellations = getSignInCancellations();
-            bool shouldResolve = false;
-
-            if (mUserInitiatedSignIn)
-            {
-                debugLog("onConnectionFailed: WILL resolve because user initiated sign-in.");
-                shouldResolve = true;
-            }
-            else if (mSignInCancelled)
-            {
-                debugLog("onConnectionFailed WILL NOT resolve (user already cancelled once).");
-                shouldResolve = false;
-            }
-            else if (cancellations < mMaxAutoSignInAttempts)
-            {
-                debugLog("onConnectionFailed: WILL resolve because we have below the max# of "
-                        + "attempts, "
-                        + cancellations
-                        + " < "
-                        + mMaxAutoSignInAttempts);
-                shouldResolve = true;
-            }
-            else
-            {
-                shouldResolve = false;
-                debugLog("onConnectionFailed: Will NOT resolve; not user-initiated and max attempts "
-                        + "reached: "
-                        + cancellations
-                        + " >= "
-                        + mMaxAutoSignInAttempts);
-            }
-
-            if (!shouldResolve)
-            {
-                // Fail and wait for the user to want to sign in.
-                debugLog("onConnectionFailed: since we won't resolve, failing now.");
-                mConnectionResult = result;
-                mConnecting = false;
-                notifyListener(false);
-                return;
-            }
-
-            debugLog("onConnectionFailed: resolving problem...");
-
-            // Resolve the connection result. This usually means showing a dialog or
-            // starting an Activity that will allow the user to give the appropriate
-            // consents so that sign-in can be successful.
-            resolveConnectionResult();
-        }
 
         /**
          * Attempts to resolve a connection failure. This will usually involve
          * starting a UI flow that lets the user give the appropriate consents
          * necessary for sign-in to work.
          */
-        void resolveConnectionResult()
+
+        private void resolveConnectionResult()
         {
             // Try to resolve the problem
             if (mExpectingResolution)
@@ -898,7 +934,7 @@ namespace BaseGameUtils
             }
 
             debugLog("resolveConnectionResult: trying to resolve result: "
-                    + mConnectionResult);
+                     + mConnectionResult);
             if (mConnectionResult.HasResolution)
             {
                 // This problem can be fixed. So let's try to fix it.
@@ -946,7 +982,8 @@ namespace BaseGameUtils
          * can be solved (for example, re-enable Google Play Services, upgrade to a
          * new version, etc).
          */
-        void giveUp(SignInFailureReason reason)
+
+        private void giveUp(SignInFailureReason reason)
         {
             mConnectOnStart = false;
             disconnect();
@@ -964,15 +1001,6 @@ namespace BaseGameUtils
         }
 
         /** Called when we are disconnected from the Google API client. */
-        public void OnConnectionSuspended(int cause)
-        {
-            debugLog("onConnectionSuspended, cause=" + cause);
-            disconnect();
-            mSignInFailureReason = null;
-            debugLog("Making extraordinary call to OnSignInFailed callback");
-            mConnecting = false;
-            notifyListener(false);
-        }
 
         public void showFailureDialog()
         {
@@ -988,12 +1016,13 @@ namespace BaseGameUtils
                 else
                 {
                     debugLog("Not showing error dialog because mShowErrorDialogs==false. "
-                            + "" + "Error was: " + mSignInFailureReason);
+                             + "" + "Error was: " + mSignInFailureReason);
                 }
             }
         }
 
         /** Shows an error dialog that's appropriate for the failure reason. */
+
         public static void showFailureDialog(Activity activity, int actResp, int errorCode)
         {
             if (activity == null)
@@ -1007,15 +1036,15 @@ namespace BaseGameUtils
             {
                 case GamesActivityResultCodes.ResultAppMisconfigured:
                     errorDialog = makeSimpleDialog(activity, GameHelperUtils.getString(
-                            activity, GameHelperUtils.R_APP_MISCONFIGURED));
+                        activity, GameHelperUtils.R_APP_MISCONFIGURED));
                     break;
                 case GamesActivityResultCodes.ResultSignInFailed:
                     errorDialog = makeSimpleDialog(activity, GameHelperUtils.getString(
-                            activity, GameHelperUtils.R_SIGN_IN_FAILED));
+                        activity, GameHelperUtils.R_SIGN_IN_FAILED));
                     break;
                 case GamesActivityResultCodes.ResultLicenseFailed:
                     errorDialog = makeSimpleDialog(activity, GameHelperUtils.getString(
-                            activity, GameHelperUtils.R_LICENSE_FAILED));
+                        activity, GameHelperUtils.R_LICENSE_FAILED));
                     break;
                 default:
                     // No meaningful Activity response code, so generate default Google
@@ -1025,23 +1054,31 @@ namespace BaseGameUtils
                     {
                         // get fallback dialog
                         Log.Error("GameHelper", "No standard error dialog available. Making fallback dialog.");
-                        errorDialog = makeSimpleDialog(
-                        activity,  GameHelperUtils.getString(activity, GameHelperUtils.R_UNKNOWN_ERROR) + " " + GameHelperUtils.errorCodeToString(errorCode));
+                        errorDialog = makeSimpleDialog(activity,
+                            GameHelperUtils.getString(activity, GameHelperUtils.R_UNKNOWN_ERROR) + " " +
+                            GameHelperUtils.errorCodeToString(errorCode));
                     }
+                    break;
             }
 
             errorDialog.Show();
         }
 
-        static Dialog makeSimpleDialog(Activity activity, String text)
+        public static Dialog makeSimpleDialog(Activity activity, String text)
         {
-            return (new AlertDialog.Builder(activity)).SetMessage(text).SetNeutralButton(Android.Resource.String.ok, null).Create();
+            return
+                (new AlertDialog.Builder(activity)).SetMessage(text)
+                    .SetNeutralButton(Android.Resource.String.Ok, (null as EventHandler<DialogClickEventArgs>))
+                    .Create();
         }
 
-        static Dialog
-        makeSimpleDialog(Activity activity, String title, String text)
+        public static Dialog makeSimpleDialog(Activity activity, String title, String text)
         {
-            return (new AlertDialog.Builder(activity)).SetMessage(text).SetTitle(title).SetNeutralButton(Android.Resource.String.ok, null).Create();
+            return
+                (new AlertDialog.Builder(activity)).SetMessage(text)
+                    .SetTitle(title)
+                    .SetNeutralButton(Android.Resource.String.Ok, (null as EventHandler<DialogClickEventArgs>))
+                    .Create();
         }
 
         public Dialog makeSimpleDialog(String text)
@@ -1064,7 +1101,7 @@ namespace BaseGameUtils
             return makeSimpleDialog(mActivity, title, text);
         }
 
-        void debugLog(String message)
+        private void debugLog(String message)
         {
             if (mDebugLog)
             {
@@ -1072,12 +1109,12 @@ namespace BaseGameUtils
             }
         }
 
-        void logWarn(String message)
+        private void logWarn(String message)
         {
             Log.Warn(TAG, "!!! GameHelper WARNING: " + message);
         }
 
-        void logError(String message)
+        private void logError(String message)
         {
             Log.Error(TAG, "*** GameHelper ERROR: " + message);
         }
@@ -1091,18 +1128,6 @@ namespace BaseGameUtils
         {
             debugLog("Forcing mConnectOnStart=" + connectOnStart);
             mConnectOnStart = connectOnStart;
-        }
-
-
-        public System.IntPtr Handle
-        {
-            get { throw new System.NotImplementedException(); }
-        }
-
-        public void Dispose()
-        {
-            //TODO: FIX
-            //throw new System.NotImplementedException();
         }
     }
 }

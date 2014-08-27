@@ -1,20 +1,7 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-
-using Android.App;
-using Android.Content;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
-
 namespace BaseGameUtils
 {
     public interface IGameHelperListener
     {
-
         /**
          * Called when sign-in fails. As a result, a "Sign-In" button can be
          * shown to the user; when that button is clicked, call
@@ -39,6 +26,5 @@ namespace BaseGameUtils
 
         /** Called when sign-in succeeds. */
         void OnSignInSucceeded();
-    
     }
 }

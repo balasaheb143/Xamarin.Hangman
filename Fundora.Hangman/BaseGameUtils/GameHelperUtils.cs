@@ -143,7 +143,8 @@ namespace BaseGameUtils
         {
             try
             {
-                Signature[] sigs = ctx.PackageManager.GetPackageInfo(ctx.PackageName, PackageInfoFlags.Signatures).Signatures.ToArray();
+                Signature[] sigs =
+                    ctx.PackageManager.GetPackageInfo(ctx.PackageName, PackageInfoFlags.Signatures).Signatures.ToArray();
                 if (sigs.Length == 0)
                 {
                     return "ERROR: NO SIGNATURE.";
