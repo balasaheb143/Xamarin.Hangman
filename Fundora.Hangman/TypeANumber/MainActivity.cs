@@ -8,11 +8,15 @@ using Android.Views;
 using Android.Widget;
 using Android.OS;
 using BaseGameUtils;
+using Java.Lang;
+using Java.Util.Jar;
+using Exception = System.Exception;
 using Fragment = Android.Support.V4.App.Fragment;
+using String = System.String;
 
 namespace TypeANumber
 {
-    [Android.App.Activity(Label = "TypeANumber", MainLauncher = true, Icon = "@drawable/icon")]
+    [Android.App.Activity(Name = "com.google.example.games.tanc.MainActivity", Label = "Type-a-Number Challenge", MainLauncher = true)]
     public class MainActivity : BaseGameActivity, IGameHelperListener, IGameplayFragmentListener, IMainMenuFragmentListener, IWinFragmentListener
     {
         // Fragments
@@ -21,7 +25,8 @@ namespace TypeANumber
         WinFragment mWinFragment;
 
         // request codes we use when invoking an external activity
-        int RC_RESOLVE = 5000, RC_UNUSED = 5001;
+        //int RC_RESOLVE = 5000,
+        int RC_UNUSED = 5001;
 
         // tag for debug logging
         bool ENABLE_DEBUG = true;
@@ -38,7 +43,6 @@ namespace TypeANumber
         {
             try
             {
-
                 enableDebugLog(ENABLE_DEBUG, TAG);
                 base.OnCreate(bundle);
                 SetContentView(Resource.Layout.activity_main);
@@ -146,7 +150,7 @@ namespace TypeANumber
                 Resource.String.achievement_bored, Resource.String.achievement_humble,
                 Resource.String.achievement_leet, Resource.String.achievement_prime,
                 Resource.String.leaderboard_easy, Resource.String.leaderboard_hard
-        };
+            };
             foreach (int i in res_ids)
             {
                 if (GetString(i).Equals("ReplaceMe", StringComparison.CurrentCultureIgnoreCase))

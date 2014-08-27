@@ -16,11 +16,12 @@ using Android.Runtime;
 using Android.Util;
 using Java.Lang;
 using Exception = System.Exception;
+using Object = Java.Lang.Object;
 using String = System.String;
 
 namespace BaseGameUtils
 {
-    public class GameHelper : IGoogleApiClientConnectionCallbacks, IGoogleApiClientOnConnectionFailedListener
+    public class GameHelper : Object, IGoogleApiClientConnectionCallbacks, IGoogleApiClientOnConnectionFailedListener
     {
         public static String TAG = "GameHelper";
 
@@ -29,8 +30,6 @@ namespace BaseGameUtils
         // Request code we use when invoking other Activities to complete the
         // sign-in flow.
         private static int RC_RESOLVE = 9001;
-
-        public IntPtr Handle { get; private set; }
 
         // Request code when invoking Activities whose result we don't care about.
         private static int RC_UNUSED = 9002;
@@ -48,6 +47,7 @@ namespace BaseGameUtils
                                        | CLIENT_APPSTATE | CLIENT_SNAPSHOT;
 
         private static int DEFAULT_MAX_SIGN_IN_ATTEMPTS = 3;
+        private readonly Handler mHandler;
 
         // What clients were requested? (bit flags)
         private readonly int mRequestedClients = CLIENT_NONE;
@@ -80,11 +80,9 @@ namespace BaseGameUtils
         // Print debug logs?
         private bool mDebugLog;
         private bool mExpectingResolution;
-        private GamesClass.GamesOptions mGamesApiOptions;
+        private GamesClass.GamesOptions mGamesApiOptions = GamesClass.GamesOptions.InvokeBuilder().Build();
         private IGoogleApiClient mGoogleApiClient;
         private GoogleApiClientBuilder mGoogleApiClientBuilder;
-
-        private Handler mHandler;
 
         /*
          * If we got an invitation when we connected to the games client, it's here.
@@ -172,12 +170,6 @@ namespace BaseGameUtils
             debugLog("Making extraordinary call to OnSignInFailed callback");
             mConnecting = false;
             notifyListener(false);
-        }
-
-        public void Dispose()
-        {
-            //TODO: FIX
-            //throw new System.NotImplementedException();
         }
 
         public void OnConnectionFailed(ConnectionResult result)
@@ -274,7 +266,7 @@ namespace BaseGameUtils
             if (mGoogleApiClientBuilder != null)
             {
                 String error = "GameHelper: you cannot call set*ApiOptions after the client "
-                               + "builder has been created. Call it before calling createApiClientBuilder() "
+                               + "builder has been created. Call it before calling CreateApiClientBuilder() "
                                + "or setup().";
                 logError(error);
                 throw new IllegalStateException(error);
@@ -321,13 +313,14 @@ namespace BaseGameUtils
          * GoogleApiClient.Builder before calling @link{#setup}.
          */
 
-        public GoogleApiClientBuilder createApiClientBuilder()
+        public GoogleApiClientBuilder CreateApiClientBuilder()
         {
             try
             {
                 if (mSetupDone)
                 {
-                    String error = "GameHelper: you called GameHelper.createApiClientBuilder() after " + "calling setup. You can only get a client builder BEFORE performing setup.";
+                    String error = "GameHelper: you called GameHelper.CreateApiClientBuilder() after " +
+                                   "calling setup. You can only get a client builder BEFORE performing setup.";
                     logError(error);
                     throw new IllegalStateException(error);
                 }
@@ -336,31 +329,61 @@ namespace BaseGameUtils
 
                 if (0 != (mRequestedClients & CLIENT_GAMES))
                 {
-                    builder.AddApi(GamesClass.Api, mGamesApiOptions);
-                    builder.AddScope(GamesClass.ScopeGames);
+                    try
+                    {
+                        //TODO: FIX
+                        builder.AddApi(GamesClass.Api, (Object)mGamesApiOptions);
+                        builder.AddScope(GamesClass.ScopeGames);
+                    }
+                    catch (Exception ex)
+                    {
+                        ex.ToString();
+                        builder.AddApi(GamesClass.Api);
+                    }
+
                 }
 
                 if (0 != (mRequestedClients & CLIENT_PLUS))
                 {
-                    builder.AddApi(PlusClass.Api);
-                    builder.AddScope(PlusClass.ScopePlusLogin);
+                    try
+                    {
+                        builder.AddApi(PlusClass.Api);
+                        builder.AddScope(PlusClass.ScopePlusLogin);
+                    }
+                    catch (Exception ex)
+                    {
+                        ex.ToString();
+                    }
                 }
 
                 if (0 != (mRequestedClients & CLIENT_APPSTATE))
                 {
-                    builder.AddApi(AppStateManager.Api);
-                    builder.AddScope(AppStateManager.ScopeAppState);
+                    try
+                    {
+                        builder.AddApi(AppStateManager.Api);
+                        builder.AddScope(AppStateManager.ScopeAppState);
+                    }
+                    catch (Exception ex)
+                    {
+                        ex.ToString();
+                    }
                 }
 
                 if (0 != (mRequestedClients & CLIENT_SNAPSHOT))
                 {
-                    builder.AddScope(DriveClass.ScopeAppfolder);
-                    builder.AddApi(DriveClass.Api);
+                    try
+                    {
+                        builder.AddScope(DriveClass.ScopeAppfolder);
+                        builder.AddApi(DriveClass.Api);
+                    }
+                    catch (Exception ex)
+                    {
+                        ex.ToString();
+                    }
                 }
 
                 mGoogleApiClientBuilder = builder;
                 return builder;
-
             }
             catch (Exception ex)
             {
@@ -399,7 +422,7 @@ namespace BaseGameUtils
                 if (mGoogleApiClientBuilder == null)
                 {
                     // we don't have a builder yet, so create one
-                    mGoogleApiClientBuilder = createApiClientBuilder();
+                    mGoogleApiClientBuilder = CreateApiClientBuilder();
                 }
 
                 mGoogleApiClient = mGoogleApiClientBuilder.Build();
@@ -470,35 +493,39 @@ namespace BaseGameUtils
 
         public void onStart(Activity act)
         {
-            mActivity = act;
-            mAppContext = act.ApplicationContext;
-
-            debugLog("onStart");
-            assertConfigured("onStart");
-
-            if (mConnectOnStart)
+            try
             {
-                if (mGoogleApiClient.IsConnected)
+                mActivity = act;
+                mAppContext = act.ApplicationContext;
+
+                debugLog("onStart");
+                assertConfigured("onStart");
+
+                if (mConnectOnStart)
                 {
-                    Log.Warn(TAG,
-                        "GameHelper: client was already connected on onStart()");
+                    if (mGoogleApiClient.IsConnected)
+                    {
+                        Log.Warn(TAG,
+                            "GameHelper: client was already connected on onStart()");
+                    }
+                    else
+                    {
+                        debugLog("Connecting client.");
+                        mConnecting = true;
+                        mGoogleApiClient.Connect();
+                    }
                 }
                 else
                 {
-                    debugLog("Connecting client.");
-                    mConnecting = true;
-                    mGoogleApiClient.Connect();
+                    debugLog("Not attempting to connect becase mConnectOnStart=false");
+                    debugLog("Instead, reporting a sign-in failure.");
+                    var runnable = new Runnable(() => { notifyListener(false); });
+                    mHandler.PostDelayed(runnable, 1000);
                 }
             }
-            else
+            catch (Exception ex)
             {
-                debugLog("Not attempting to connect becase mConnectOnStart=false");
-                debugLog("Instead, reporting a sign-in failure.");
-                Runnable runnable = new Runnable(() =>
-                {
-                    notifyListener(false);
-                });
-                mHandler.PostDelayed(runnable, 1000);
+                ex.ToString();
             }
         }
 
@@ -696,89 +723,95 @@ namespace BaseGameUtils
          * process, processes it appropriately.
          */
 
-        public void onActivityResult(int requestCode, int responseCode,
-            Intent intent)
+        public void onActivityResult(int requestCode, int responseCode, Intent intent)
         {
-            debugLog("onActivityResult: req="
-                     + (requestCode == RC_RESOLVE ? "RC_RESOLVE" : Java.Lang.String.ValueOf(requestCode)) + ", resp="
-                     + GameHelperUtils.activityResponseCodeToString(responseCode));
-            if (requestCode != RC_RESOLVE)
+            try
             {
-                debugLog("onActivityResult: request code not meant for us. Ignoring.");
-                return;
-            }
+                debugLog("onActivityResult: req="
+                         + (requestCode == RC_RESOLVE ? "RC_RESOLVE" : Java.Lang.String.ValueOf(requestCode)) +
+                         ", resp="
+                         + GameHelperUtils.activityResponseCodeToString(responseCode));
+                if (requestCode != RC_RESOLVE)
+                {
+                    debugLog("onActivityResult: request code not meant for us. Ignoring.");
+                    return;
+                }
 
-            // no longer expecting a resolution
-            mExpectingResolution = false;
+                // no longer expecting a resolution
+                mExpectingResolution = false;
 
-            if (!mConnecting)
-            {
-                debugLog("onActivityResult: ignoring because we are not connecting.");
-                return;
-            }
+                if (!mConnecting)
+                {
+                    debugLog("onActivityResult: ignoring because we are not connecting.");
+                    return;
+                }
 
-            // We're coming back from an activity that was launched to resolve a
-            // connection problem. For example, the sign-in UI.
-            if (responseCode == (int)Result.Ok)
-            {
-                // Ready to try to connect again.
-                debugLog("onAR: Resolution was RESULT_OK, so connecting current client again.");
-                connect();
-            }
-            else if (responseCode == GamesActivityResultCodes.ResultReconnectRequired)
-            {
-                debugLog("onAR: Resolution was RECONNECT_REQUIRED, so reconnecting.");
-                connect();
-            }
-            else if (responseCode == (int)Result.Canceled)
-            {
-                // User cancelled.
-                debugLog("onAR: Got a cancellation result, so disconnecting.");
-                mSignInCancelled = true;
-                mConnectOnStart = false;
-                mUserInitiatedSignIn = false;
-                mSignInFailureReason = null; // cancelling is not a failure!
-                mConnecting = false;
-                mGoogleApiClient.Disconnect();
+                // We're coming back from an activity that was launched to resolve a
+                // connection problem. For example, the sign-in UI.
+                if (responseCode == (int)Result.Ok)
+                {
+                    // Ready to try to connect again.
+                    debugLog("onAR: Resolution was RESULT_OK, so connecting current client again.");
+                    connect();
+                }
+                else if (responseCode == GamesActivityResultCodes.ResultReconnectRequired)
+                {
+                    debugLog("onAR: Resolution was RECONNECT_REQUIRED, so reconnecting.");
+                    connect();
+                }
+                else if (responseCode == (int)Result.Canceled)
+                {
+                    // User cancelled.
+                    debugLog("onAR: Got a cancellation result, so disconnecting.");
+                    mSignInCancelled = true;
+                    mConnectOnStart = false;
+                    mUserInitiatedSignIn = false;
+                    mSignInFailureReason = null; // cancelling is not a failure!
+                    mConnecting = false;
+                    mGoogleApiClient.Disconnect();
 
-                // increment # of cancellations
-                int prevCancellations = getSignInCancellations();
-                int newCancellations = incrementSignInCancellations();
-                debugLog("onAR: # of cancellations " + prevCancellations + " --> "
-                         + newCancellations + ", max " + mMaxAutoSignInAttempts);
+                    // increment # of cancellations
+                    int prevCancellations = getSignInCancellations();
+                    int newCancellations = incrementSignInCancellations();
+                    debugLog("onAR: # of cancellations " + prevCancellations + " --> " + newCancellations + ", max " + mMaxAutoSignInAttempts);
 
-                notifyListener(false);
+                    notifyListener(false);
+                }
+                else
+                {
+                    // Whatever the problem we were trying to solve, it was not
+                    // solved. So give up and show an error message.
+                    debugLog("onAR: responseCode=" + GameHelperUtils.activityResponseCodeToString(responseCode) + ", so giving up.");
+                    giveUp(new SignInFailureReason(mConnectionResult.ErrorCode, responseCode));
+                }
             }
-            else
+            catch (Exception ex)
             {
-                // Whatever the problem we were trying to solve, it was not
-                // solved. So give up and show an error message.
-                debugLog("onAR: responseCode="
-                         + GameHelperUtils
-                             .activityResponseCodeToString(responseCode)
-                         + ", so giving up.");
-                giveUp(new SignInFailureReason(mConnectionResult.ErrorCode, responseCode));
+                ex.ToString();
             }
         }
 
         private void notifyListener(bool success)
         {
-            debugLog("Notifying LISTENER of sign-in "
-                     + (success
-                         ? "SUCCESS"
-                         : mSignInFailureReason != null
-                             ? "FAILURE (error)"
-                             : "FAILURE (no error)"));
-            if (mListener != null)
+            try
             {
-                if (success)
+                debugLog("Notifying LISTENER of sign-in "
+                         + (success  ? "SUCCESS" : mSignInFailureReason != null  ? "FAILURE (error)" : "FAILURE (no error)"));
+                if (mListener != null)
                 {
-                    mListener.OnSignInSucceeded();
+                    if (success)
+                    {
+                        mListener.OnSignInSucceeded();
+                    }
+                    else
+                    {
+                        mListener.OnSignInFailed();
+                    }
                 }
-                else
-                {
-                    mListener.OnSignInFailed();
-                }
+            }
+            catch (Exception ex)
+            {
+                ex.ToString();
             }
         }
 
@@ -926,39 +959,47 @@ namespace BaseGameUtils
 
         private void resolveConnectionResult()
         {
-            // Try to resolve the problem
-            if (mExpectingResolution)
+            try
             {
-                debugLog("We're already expecting the result of a previous resolution.");
-                return;
-            }
+                // Try to resolve the problem
+                if (mExpectingResolution)
+                {
+                    debugLog("We're already expecting the result of a previous resolution.");
+                    return;
+                }
 
-            debugLog("resolveConnectionResult: trying to resolve result: "
-                     + mConnectionResult);
-            if (mConnectionResult.HasResolution)
-            {
-                // This problem can be fixed. So let's try to fix it.
-                debugLog("Result has resolution. Starting it.");
-                try
+                debugLog("resolveConnectionResult: trying to resolve result: "
+                         + mConnectionResult);
+                if (mConnectionResult.HasResolution)
                 {
-                    // launch appropriate UI flow (which might, for example, be the
-                    // sign-in flow)
-                    mExpectingResolution = true;
-                    mConnectionResult.StartResolutionForResult(mActivity, RC_RESOLVE);
+                    // This problem can be fixed. So let's try to fix it.
+                    debugLog("Result has resolution. Starting it.");
+                    try
+                    {
+                        // launch appropriate UI flow (which might, for example, be the
+                        // sign-in flow)
+                        mExpectingResolution = true;
+                        mConnectionResult.StartResolutionForResult(mActivity, RC_RESOLVE);
+                    }
+                    catch (IntentSender.SendIntentException e)
+                    {
+                        e.ToString();
+                        // Try connecting again
+                        debugLog("SendIntentException, so connecting again.");
+                        connect();
+                    }
                 }
-                catch (IntentSender.SendIntentException e)
+                else
                 {
-                    // Try connecting again
-                    debugLog("SendIntentException, so connecting again.");
-                    connect();
+                    // It's not a problem what we can solve, so give up and show an
+                    // error.
+                    debugLog("resolveConnectionResult: result has no resolution. Giving up.");
+                    giveUp(new SignInFailureReason(mConnectionResult.ErrorCode));
                 }
             }
-            else
+            catch (Exception ex)
             {
-                // It's not a problem what we can solve, so give up and show an
-                // error.
-                debugLog("resolveConnectionResult: result has no resolution. Giving up.");
-                giveUp(new SignInFailureReason(mConnectionResult.ErrorCode));
+                ex.ToString();
             }
         }
 
@@ -985,19 +1026,26 @@ namespace BaseGameUtils
 
         private void giveUp(SignInFailureReason reason)
         {
-            mConnectOnStart = false;
-            disconnect();
-            mSignInFailureReason = reason;
-
-            if (reason.mActivityResultCode == GamesActivityResultCodes.ResultAppMisconfigured)
+            try
             {
-                // print debug info for the developer
-                GameHelperUtils.printMisconfiguredDebugInfo(mAppContext);
-            }
+                mConnectOnStart = false;
+                disconnect();
+                mSignInFailureReason = reason;
 
-            showFailureDialog();
-            mConnecting = false;
-            notifyListener(false);
+                if (reason.mActivityResultCode == GamesActivityResultCodes.ResultAppMisconfigured)
+                {
+                    // print debug info for the developer
+                    GameHelperUtils.printMisconfiguredDebugInfo(mAppContext);
+                }
+
+                showFailureDialog();
+                mConnecting = false;
+                notifyListener(false);
+            }
+            catch (Exception ex)
+            {
+                ex.ToString();
+            }
         }
 
         /** Called when we are disconnected from the Google API client. */

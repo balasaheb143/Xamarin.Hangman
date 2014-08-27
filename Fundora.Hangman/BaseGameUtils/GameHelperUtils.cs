@@ -38,9 +38,9 @@ namespace BaseGameUtils
         {
             switch (respCode)
             {
-                case (int) Result.Ok:
+                case (int)Result.Ok:
                     return "RESULT_OK";
-                case (int) Result.Canceled:
+                case (int)Result.Canceled:
                     return "RESULT_CANCELED";
                 case GamesActivityResultCodes.ResultAppMisconfigured:
                     return "RESULT_APP_MISCONFIGURED";
@@ -92,35 +92,42 @@ namespace BaseGameUtils
 
         public static void printMisconfiguredDebugInfo(Context ctx)
         {
-            Log.Warn("GameHelper", "****");
-            Log.Warn("GameHelper", "****");
-            Log.Warn("GameHelper", "**** APP NOT CORRECTLY CONFIGURED TO USE GOOGLE PLAY GAME SERVICES");
-            Log.Warn("GameHelper", "**** This is usually caused by one of these reasons:");
-            Log.Warn("GameHelper", "**** (1) Your package name and certificate fingerprint do not match");
-            Log.Warn("GameHelper", "****     the client ID you registered in Developer Console.");
-            Log.Warn("GameHelper", "**** (2) Your App ID was incorrectly entered.");
-            Log.Warn("GameHelper", "**** (3) Your game settings have not been published and you are ");
-            Log.Warn("GameHelper", "****     trying to log in with an account that is not listed as");
-            Log.Warn("GameHelper", "****     a test account.");
-            Log.Warn("GameHelper", "****");
-            if (ctx == null)
+            try
             {
-                Log.Warn("GameHelper", "*** (no Context, so can't print more debug info)");
-                return;
-            }
+                Log.Warn("GameHelper", "****");
+                Log.Warn("GameHelper", "****");
+                Log.Warn("GameHelper", "**** APP NOT CORRECTLY CONFIGURED TO USE GOOGLE PLAY GAME SERVICES");
+                Log.Warn("GameHelper", "**** This is usually caused by one of these reasons:");
+                Log.Warn("GameHelper", "**** (1) Your package name and certificate fingerprint do not match");
+                Log.Warn("GameHelper", "****     the client ID you registered in Developer Console.");
+                Log.Warn("GameHelper", "**** (2) Your App ID was incorrectly entered.");
+                Log.Warn("GameHelper", "**** (3) Your game settings have not been published and you are ");
+                Log.Warn("GameHelper", "****     trying to log in with an account that is not listed as");
+                Log.Warn("GameHelper", "****     a test account.");
+                Log.Warn("GameHelper", "****");
+                if (ctx == null)
+                {
+                    Log.Warn("GameHelper", "*** (no Context, so can't print more debug info)");
+                    return;
+                }
 
-            Log.Warn("GameHelper", "**** To help you debug, here is the information about this app");
-            Log.Warn("GameHelper", "**** Package name         : " + ctx.PackageName);
-            Log.Warn("GameHelper", "**** Cert SHA1 fingerprint: " + getSHA1CertFingerprint(ctx));
-            Log.Warn("GameHelper", "**** App ID from          : " + getAppIdFromResource(ctx));
-            Log.Warn("GameHelper", "****");
-            Log.Warn("GameHelper", "**** Check that the above information matches your setup in ");
-            Log.Warn("GameHelper", "**** Developer Console. Also, check that you're logging in with the");
-            Log.Warn("GameHelper", "**** right account (it should be listed in the Testers section if");
-            Log.Warn("GameHelper", "**** your project is not yet published).");
-            Log.Warn("GameHelper", "****");
-            Log.Warn("GameHelper", "**** For more information, refer to the troubleshooting guide:");
-            Log.Warn("GameHelper", "****   http://developers.google.com/games/services/android/troubleshooting");
+                Log.Warn("GameHelper", "**** To help you debug, here is the information about this app");
+                Log.Warn("GameHelper", "**** Package name         : " + ctx.PackageName);
+                Log.Warn("GameHelper", "**** Cert SHA1 fingerprint: " + getSHA1CertFingerprint(ctx));
+                Log.Warn("GameHelper", "**** App ID from          : " + getAppIdFromResource(ctx));
+                Log.Warn("GameHelper", "****");
+                Log.Warn("GameHelper", "**** Check that the above information matches your setup in ");
+                Log.Warn("GameHelper", "**** Developer Console. Also, check that you're logging in with the");
+                Log.Warn("GameHelper", "**** right account (it should be listed in the Testers section if");
+                Log.Warn("GameHelper", "**** your project is not yet published).");
+                Log.Warn("GameHelper", "****");
+                Log.Warn("GameHelper", "**** For more information, refer to the troubleshooting guide:");
+                Log.Warn("GameHelper", "****   http://developers.google.com/games/services/android/troubleshooting");
+            }
+            catch (Exception ex)
+            {
+                ex.ToString();
+            }
         }
 
         public static String getAppIdFromResource(Context ctx)
@@ -179,11 +186,18 @@ namespace BaseGameUtils
 
         public static void byteToString(StringBuilder sb, byte b)
         {
-            int unsigned_byte = b < 0 ? b + 256 : b;
-            int hi = unsigned_byte/16;
-            int lo = unsigned_byte%16;
-            sb.Append("0123456789ABCDEF".Substring(hi, hi + 1));
-            sb.Append("0123456789ABCDEF".Substring(lo, lo + 1));
+            try
+            {
+                int unsigned_byte = b < 0 ? b + 256 : b;
+                int hi = unsigned_byte / 16;
+                int lo = unsigned_byte % 16;
+                sb.Append("0123456789ABCDEF".Substring(hi, 1));
+                sb.Append("0123456789ABCDEF".Substring(lo, 1));
+            }
+            catch (Exception ex)
+            {
+                ex.ToString();
+            }
         }
 
         public static String getString(Context ctx, int whichString)

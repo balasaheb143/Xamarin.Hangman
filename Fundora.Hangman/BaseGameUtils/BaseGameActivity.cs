@@ -99,18 +99,32 @@ namespace BaseGameUtils
 
         protected override void OnCreate(Bundle b)
         {
-            base.OnCreate(b);
-            if (mHelper == null)
+            try
             {
-                getGameHelper();
+                base.OnCreate(b);
+                if (mHelper == null)
+                {
+                    getGameHelper();
+                }
+                mHelper.setup(this as IGameHelperListener);
             }
-            mHelper.setup(this as IGameHelperListener);
+            catch (Exception ex)
+            {
+                ex.ToString();
+            }
         }
 
         protected override void OnStart()
         {
-            base.OnStart();
-            mHelper.onStart(this);
+            try
+            {
+                base.OnStart();
+                mHelper.onStart(this);
+            }
+            catch (Exception ex)
+            {
+                ex.ToString();
+            }
         }
 
         protected override void OnStop()

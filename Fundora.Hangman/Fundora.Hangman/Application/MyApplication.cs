@@ -1,18 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Android.App;
-using Android.Content;
-using Android.OS;
 using Android.Runtime;
-using Android.Views;
-using Android.Widget;
-using SharedCode;
 using SharedCode.Models;
 using SQLite;
+using Environment = Android.OS.Environment;
 
 namespace Fundora.Hangman.Application
 {
@@ -21,15 +15,16 @@ namespace Fundora.Hangman.Application
     {
         private static String RomanianDbName = "Fundora.Hangman.Romanian.db3";
         private static String DbPath;
-        public static SQLiteAsyncConnection sqLConnection { get; private set; }
-        public static List<Word> Words { get; set; }
-
-        public static List<Difficulty> DifficultyLevels { get; set; }
 
         public MyApplication(IntPtr javaReference, JniHandleOwnership transfer)
             : base(javaReference, transfer)
         {
         }
+
+        public static SQLiteAsyncConnection sqLConnection { get; private set; }
+        public static List<Word> Words { get; set; }
+
+        public static List<Difficulty> DifficultyLevels { get; set; }
 
         public override void OnCreate()
         {
@@ -49,15 +44,15 @@ namespace Fundora.Hangman.Application
         {
             try
             {
-                DbPath = Path.Combine(Android.OS.Environment.ExternalStorageDirectory.ToString(), RomanianDbName);
+                DbPath = Path.Combine(Environment.ExternalStorageDirectory.ToString(), RomanianDbName);
 
                 //if (!File.Exists(DbPath))
                 //{
-                using (BinaryReader br = new BinaryReader(Assets.Open(RomanianDbName)))
+                using (var br = new BinaryReader(Assets.Open(RomanianDbName)))
                 {
-                    using (BinaryWriter bw = new BinaryWriter(new FileStream(DbPath, FileMode.Create)))
+                    using (var bw = new BinaryWriter(new FileStream(DbPath, FileMode.Create)))
                     {
-                        byte[] buffer = new byte[2048];
+                        var buffer = new byte[2048];
                         int len = 0;
                         while ((len = br.Read(buffer, 0, buffer.Length)) > 0)
                         {

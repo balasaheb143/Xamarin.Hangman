@@ -1,4 +1,5 @@
 using System;
+using Android.Gms.Games;
 using Android.Support.V4.App;
 using Android.OS;
 using Android.Views;
@@ -37,7 +38,7 @@ namespace TypeANumber
                     mListener.OnSignOutButtonClicked();
                     break;
                 case Resource.Id.btn_unlock:
-                    //GamesClass.Achievements.Unlock(BaseGameActivity.mHelper.getApiClient(), "CgkIht6yrNoPEAIQAQ");
+                    GamesClass.Achievements.Unlock(BaseGameActivity.mHelper.getApiClient(), "CgkIht6yrNoPEAIQAw");
                     break;
             }
         }
