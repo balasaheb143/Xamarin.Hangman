@@ -333,13 +333,13 @@ namespace BaseGameUtils
                     {
                         //TODO: FIX
                         builder.AddApi(GamesClass.Api, (Object)mGamesApiOptions);
-                        builder.AddScope(GamesClass.ScopeGames);
                     }
                     catch (Exception ex)
                     {
                         ex.ToString();
                         builder.AddApi(GamesClass.Api);
                     }
+                    builder.AddScope(GamesClass.ScopeGames);
 
                 }
 
